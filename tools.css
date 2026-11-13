@@ -46,6 +46,8 @@
 .tool-card p { font-size: 12px; color: var(--text-muted); line-height: 1.35; flex: 1; }
 
 .tool-card input[type="text"],
+.tool-card input[type="password"],
+.tool-card input[type="number"],
 .tool-card select {
   padding: 5px 7px;
   border: 1px solid var(--border-subtle);

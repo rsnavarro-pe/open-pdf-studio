@@ -624,6 +624,18 @@
             <input id="tool-pipeline-input" type="file" accept="application/pdf" hidden />
           </div>
         </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">SECURITY</div>
+          <h4>Unlock PDF</h4>
+          <p>Remove owner restrictions or decrypt a password-protected PDF.</p>
+          <input id="tool-unlock-pw" type="password" placeholder="Password (optional if owner-locked)" />
+          <div class="tool-actions">
+            <button id="tool-unlock-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-unlock-input">Pick File</label>
+            <input id="tool-unlock-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>

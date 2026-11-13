@@ -22,6 +22,10 @@ export async function loadPdfA(arrayBuffer, fileName) {
   initPdfEngine();
   const copy = new Uint8Array(arrayBuffer).slice();
   const loadingTask = window.pdfjsLib.getDocument({ data: copy });
+  loadingTask.onPassword = (updatePassword, reason) => {
+    const pw = window.prompt(reason === 2 ? 'Incorrect password. Try again:' : 'This PDF is password-protected. Enter password:');
+    if (pw !== null) updatePassword(pw);
+  };
   pdfDocA = await loadingTask.promise;
   snapCache = new Map();
   clearDocumentState(new Uint8Array(arrayBuffer), fileName, pdfDocA.numPages);

@@ -123,3 +123,44 @@ export async function runWorkflowPipeline(arrayBuffer, baseName, pipelineId, onS
     onStatus(`Workflow complete → ${cleanName}_sanitized_flat.pdf (flattened & metadata stripped).`);
   }
 }
+
+export async function unlockPdf(arrayBuffer, baseName, password, onStatus) {
+  const { PDFDocument } = window.PDFLib;
+  const cleanName = baseName.replace(/\.pdf$/i, '');
+
+  if (!password) {
+    try {
+      const src = await PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
+      const out = await PDFDocument.create();
+      (await out.copyPages(src, src.getPageIndices())).forEach((p) => out.addPage(p));
+      const bytes = await out.save({ useObjectStreams: true });
+      triggerDownload(new Blob([bytes], { type: 'application/pdf' }), `${cleanName}_unlocked.pdf`);
+      onStatus(`Unlocked owner restrictions → ${cleanName}_unlocked.pdf.`);
+      return;
+    } catch (_) { /* fall through to password decrypt */ }
+  }
+
+  const task = window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer).slice(), password: password || undefined });
+  task.onPassword = (updatePassword, reason) => {
+    const pw = window.prompt(reason === 2 ? 'Incorrect password. Try again:' : 'Enter PDF password to unlock:');
+    if (pw !== null) updatePassword(pw);
+  };
+  const pdfJsDoc = await task.promise;
+  const outDoc = await PDFDocument.create();
+  for (let p = 1; p <= pdfJsDoc.numPages; p++) {
+    onStatus(`Decrypting page ${p} / ${pdfJsDoc.numPages}...`);
+    const page = await pdfJsDoc.getPage(p);
+    const vp = page.getViewport({ scale: 2.0 });
+    const canvas = document.createElement('canvas');
+    canvas.width = vp.width;
+    canvas.height = vp.height;
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
+    const blob = await new Promise((res) => canvas.toBlob(res, 'image/jpeg', 0.92));
+    const img = await outDoc.embedJpg(await blob.arrayBuffer());
+    const orig = page.getViewport({ scale: 1 });
+    outDoc.addPage([orig.width, orig.height]).drawImage(img, { x: 0, y: 0, width: orig.width, height: orig.height });
+  }
+  const bytes = await outDoc.save({ useObjectStreams: true });
+  triggerDownload(new Blob([bytes], { type: 'application/pdf' }), `${cleanName}_unlocked.pdf`);
+  onStatus(`Saved decrypted copy → ${cleanName}_unlocked.pdf (${pdfJsDoc.numPages} pages).`);
+}

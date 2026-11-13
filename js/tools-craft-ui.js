@@ -14,6 +14,7 @@ import {
   cropPdfPages,
   extractTablesToCsv,
   runWorkflowPipeline,
+  unlockPdf,
 } from './pdf-tools-extra.js';
 
 function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf) {
@@ -94,5 +95,11 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
   bindCurrentAndFile('tool-pipeline', (buf, name) => {
     const pipe = document.getElementById('tool-pipeline-select').value;
     return runWorkflowPipeline(buf, name, pipe, setStatus);
+  }, setStatus, runSafe, requireOpenPdf);
+
+  // Unlock Password-Protected PDF
+  bindCurrentAndFile('tool-unlock', (buf, name) => {
+    const pw = document.getElementById('tool-unlock-pw').value;
+    return unlockPdf(buf, name, pw, setStatus);
   }, setStatus, runSafe, requireOpenPdf);
 }
