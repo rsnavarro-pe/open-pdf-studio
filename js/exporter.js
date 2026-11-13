@@ -1,0 +1,139 @@
+/**
+ * Export annotated PDF (via pdf-lib) and CSV takeoff report.
+ */
+import { state } from './state.js';
+import {
+  distPt, polylineLength, polygonPerimeter, polygonArea,
+  formatLength, formatArea, buildRevisionCloudPath,
+} from './geometry.js';
+
+export async function exportAnnotatedPdf() {
+  if (!state.pdfBytes) return;
+  const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
+  const doc = await PDFDocument.load(state.pdfBytes);
+  const font = await doc.embedFont(StandardFonts.HelveticaBold);
+  const pages = doc.getPages();
+
+  for (const m of state.markups) {
+    const page = pages[m.page - 1];
+    if (!page) continue;
+    const { height } = page.getSize();
+    const color = hexToRgb(m.color || '#c0392b', rgb);
+    const sw = m.lineWidth || 2;
+    const toPdfY = (y) => height - y;
+
+    if (['distance', 'arrow', 'callout'].includes(m.type) && m.points.length >= 2) {
+      const [a, b] = m.points;
+      page.drawLine({
+        start: { x: a.x, y: toPdfY(a.y) },
+        end: { x: b.x, y: toPdfY(b.y) },
+        thickness: sw,
+        color,
+      });
+      const label = m.type === 'distance'
+        ? formatLength(distPt(a, b), state.unitsPerPt, state.unit)
+        : (m.text || '');
+      if (label) {
+        page.drawText(label, {
+          x: m.type === 'callout' ? a.x : (a.x + b.x) / 2,
+          y: toPdfY(m.type === 'callout' ? a.y : (a.y + b.y) / 2) + 6,
+          size: 10, font, color,
+        });
+      }
+    } else if (m.type === 'perimeter' && m.points.length >= 2) {
+      drawPoly(page, m.points, toPdfY, sw, color, false);
+      const last = m.points[m.points.length - 1];
+      page.drawText(formatLength(polylineLength(m.points), state.unitsPerPt, state.unit), {
+        x: last.x, y: toPdfY(last.y) + 6, size: 10, font, color,
+      });
+    } else if (m.type === 'area' && m.points.length >= 3) {
+      drawPoly(page, m.points, toPdfY, sw, color, true);
+      const cx = m.points.reduce((s, p) => s + p.x, 0) / m.points.length;
+      const cy = m.points.reduce((s, p) => s + p.y, 0) / m.points.length;
+      const label = `${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`;
+      page.drawText(label, { x: cx - 20, y: toPdfY(cy), size: 10, font, color });
+    } else if (m.type === 'rect' && m.points.length >= 2) {
+      const [a, b] = m.points;
+      page.drawRectangle({
+        x: Math.min(a.x, b.x),
+        y: toPdfY(Math.max(a.y, b.y)),
+        width: Math.abs(b.x - a.x),
+        height: Math.abs(b.y - a.y),
+        borderColor: color,
+        borderWidth: sw,
+      });
+    } else if (m.type === 'cloud' && m.points.length >= 2) {
+      const svgPath = buildRevisionCloudPath(m.points[0], m.points[1], 14);
+      if (svgPath) {
+        page.drawSvgPath(svgPath, { x: 0, y: height, borderColor: color, borderWidth: sw });
+      }
+    } else if (m.type === 'text' && m.points.length >= 1) {
+      page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: 12, font, color });
+    } else if (m.type === 'stamp' && m.points.length >= 1) {
+      const p = m.points[0];
+      const txt = m.text || 'APPROVED';
+      const w = txt.length * 8 + 18;
+      page.drawRectangle({
+        x: p.x - w / 2, y: toPdfY(p.y) - 12, width: w, height: 24,
+        borderColor: color, borderWidth: 2,
+      });
+      page.drawText(txt, { x: p.x - w / 2 + 9, y: toPdfY(p.y) - 4, size: 11, font, color });
+    }
+  }
+
+  const outBytes = await doc.save();
+  const base = (state.pdfName || 'document').replace(/\.pdf$/i, '');
+  downloadBlob(new Blob([outBytes], { type: 'application/pdf' }), `${base}_annotated.pdf`);
+}
+
+export function exportTakeoffCsv() {
+  const rows = [['ID', 'Page', 'Type', 'Value / Text', 'Color']];
+  state.markups.forEach((m, idx) => {
+    let val = m.text || '';
+    if (m.type === 'distance' && m.points.length >= 2) {
+      val = formatLength(distPt(m.points[0], m.points[1]), state.unitsPerPt, state.unit);
+    } else if (m.type === 'perimeter') {
+      val = formatLength(polylineLength(m.points), state.unitsPerPt, state.unit);
+    } else if (m.type === 'area') {
+      val = `${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)} | P=${formatLength(polygonPerimeter(m.points), state.unitsPerPt, state.unit)}`;
+    }
+    rows.push([idx + 1, m.page, m.type, `"${val.replace(/"/g, '""')}"`, m.color]);
+  });
+
+  const csv = rows.map((r) => r.join(',')).join('\n');
+  const base = (state.pdfName || 'takeoff').replace(/\.pdf$/i, '');
+  downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8;' }), `${base}_takeoff.csv`);
+}
+
+function drawPoly(page, pts, toPdfY, sw, color, close) {
+  for (let i = 1; i < pts.length; i++) {
+    page.drawLine({
+      start: { x: pts[i - 1].x, y: toPdfY(pts[i - 1].y) },
+      end: { x: pts[i].x, y: toPdfY(pts[i].y) },
+      thickness: sw, color,
+    });
+  }
+  if (close && pts.length >= 3) {
+    page.drawLine({
+      start: { x: pts[pts.length - 1].x, y: toPdfY(pts[pts.length - 1].y) },
+      end: { x: pts[0].x, y: toPdfY(pts[0].y) },
+      thickness: sw, color,
+    });
+  }
+}
+
+function hexToRgb(hex, rgbFn) {
+  const clean = hex.replace('#', '');
+  const n = parseInt(clean, 16);
+  if (Number.isNaN(n)) return rgbFn(0.75, 0.22, 0.17);
+  return rgbFn(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
