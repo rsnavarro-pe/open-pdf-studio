@@ -17,7 +17,7 @@ export const state = {
   // Style defaults
   strokeColor: '#c0392b',
   lineWidth: 2,
-  stampType: 'APPROVED',
+  stampType: 'RSN APPROVED',
 
   // Scale calibration: unitsPerPt (displayUnit per PDF point at zoom=1)
   unit: 'm',

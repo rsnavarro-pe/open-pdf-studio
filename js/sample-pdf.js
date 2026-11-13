@@ -55,7 +55,7 @@ function drawTitleBlock(page, bold, font, subtitle, sheetNo) {
   const { rgb } = window.PDFLib;
   page.drawRectangle({ x: 24, y: 24, width: 794, height: 547, borderColor: rgb(0.2, 0.25, 0.25), borderWidth: 1.5 });
   page.drawRectangle({ x: 618, y: 24, width: 200, height: 80, borderColor: rgb(0.2, 0.25, 0.25), borderWidth: 1.5 });
-  page.drawText('RSN PDF STUDIO - SAMPLE', { x: 626, y: 84, size: 9, font: bold, color: rgb(0.1, 0.25, 0.25) });
+  page.drawText('RSN PDF STUDIO', { x: 626, y: 84, size: 9, font: bold, color: rgb(0.1, 0.25, 0.25) });
   page.drawText(subtitle, { x: 626, y: 66, size: 8, font, color: rgb(0.3, 0.35, 0.35) });
   page.drawText(`SHEET: ${sheetNo}`, { x: 626, y: 40, size: 12, font: bold, color: rgb(0.15, 0.45, 0.4) });
 }

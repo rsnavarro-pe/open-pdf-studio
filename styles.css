@@ -59,10 +59,17 @@ body {
 .brand-title h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
 
 .brand-logo {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   display: block;
   flex-shrink: 0;
+}
+
+.drop-logo {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 10px;
+  display: block;
 }
 
 .file-actions { display: flex; gap: 6px; align-items: center; }
