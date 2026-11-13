@@ -36,6 +36,7 @@ export function renderUI() {
 
   // Action buttons
   document.getElementById('btn-export-pdf').disabled = !hasDoc;
+  document.getElementById('btn-export-dxf').disabled = !hasDoc;
   document.getElementById('btn-export-csv').disabled = !hasDoc || state.markups.length === 0;
   document.getElementById('btn-undo').disabled = state.undoStack.length === 0;
   document.getElementById('btn-redo').disabled = state.redoStack.length === 0;

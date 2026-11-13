@@ -11,6 +11,7 @@ import {
 import { generateSamplePdfBytes } from './sample-pdf.js';
 import { initOverlay } from './overlay.js';
 import { exportAnnotatedPdf, exportTakeoffCsv } from './exporter.js';
+import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { initPdfTools } from './tools-ui.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
@@ -45,6 +46,22 @@ function bindFileEvents() {
   });
 
   document.getElementById('btn-export-pdf').addEventListener('click', exportAnnotatedPdf);
+  document.getElementById('btn-export-dxf').addEventListener('click', async () => {
+    if (!state.pdfBytes) return;
+    const hint = document.getElementById('tool-hint');
+    try {
+      await exportPdfToDxf(
+        state.pdfBytes.buffer,
+        state.pdfName || 'drawing.pdf',
+        'single',
+        state.currentPage,
+        state.unitsPerPt,
+        (msg) => { hint.textContent = msg; },
+      );
+    } catch (err) {
+      hint.textContent = `DXF export error: ${err?.message || 'Failed'}`;
+    }
+  });
   document.getElementById('btn-export-csv').addEventListener('click', exportTakeoffCsv);
 
   // Drag & Drop
