@@ -13,6 +13,7 @@ import { initOverlay } from './overlay.js';
 import { exportAnnotatedPdf, exportTakeoffCsv } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { initPdfTools } from './tools-ui.js';
+import { initContextMenu } from './context-menu.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
 
@@ -29,6 +30,7 @@ function init() {
   bindCalibrationModal();
   bindKeyboardShortcuts();
   initPdfTools();
+  initContextMenu();
   notify();
 }
 
