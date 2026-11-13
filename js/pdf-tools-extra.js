@@ -164,3 +164,50 @@ export async function unlockPdf(arrayBuffer, baseName, password, onStatus) {
   triggerDownload(new Blob([bytes], { type: 'application/pdf' }), `${cleanName}_unlocked.pdf`);
   onStatus(`Saved decrypted copy → ${cleanName}_unlocked.pdf (${pdfJsDoc.numPages} pages).`);
 }
+
+export async function inspectPdfFormFields(arrayBuffer) {
+  const { PDFDocument } = window.PDFLib;
+  const doc = await PDFDocument.load(arrayBuffer);
+  const fields = doc.getForm().getFields();
+  return fields.map((f) => {
+    const name = f.getName();
+    let val = '';
+    if (typeof f.getText === 'function') val = f.getText() || '';
+    else if (typeof f.isChecked === 'function') val = f.isChecked() ? 'true' : 'false';
+    else if (typeof f.getSelected === 'function') val = (f.getSelected() || []).join(', ');
+    return { name, value: val };
+  });
+}
+
+export async function fillOrFlattenPdfForm(arrayBuffer, baseName, pairsText, flatten, onStatus) {
+  const { PDFDocument } = window.PDFLib;
+  const doc = await PDFDocument.load(arrayBuffer);
+  const form = doc.getForm();
+  const fields = form.getFields();
+
+  const map = new Map();
+  for (const line of String(pairsText || '').split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq > 0) map.set(line.slice(0, eq).trim(), line.slice(eq + 1).trim());
+  }
+
+  let updated = 0;
+  for (const f of fields) {
+    const name = f.getName();
+    if (!map.has(name)) continue;
+    const v = map.get(name);
+    if (typeof f.setText === 'function') { f.setText(v); updated++; }
+    else if (typeof f.check === 'function') {
+      if (['true', '1', 'yes', 'checked'].includes(v.toLowerCase())) f.check();
+      else f.uncheck();
+      updated++;
+    } else if (typeof f.select === 'function' && v) { f.select(v); updated++; }
+  }
+
+  if (flatten) form.flatten();
+  const bytes = await doc.save({ useObjectStreams: true });
+  const cleanName = baseName.replace(/\.pdf$/i, '');
+  const suffix = flatten ? 'form_flattened' : 'form_filled';
+  triggerDownload(new Blob([bytes], { type: 'application/pdf' }), `${cleanName}_${suffix}.pdf`);
+  onStatus(`${flatten ? 'Flattened' : 'Saved'} form (${updated}/${fields.length} fields updated) → ${cleanName}_${suffix}.pdf.`);
+}

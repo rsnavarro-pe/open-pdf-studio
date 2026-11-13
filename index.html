@@ -636,6 +636,17 @@
             <input id="tool-unlock-input" type="file" accept="application/pdf" hidden />
           </div>
         </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">FORMS</div>
+          <h4>AcroForm Filler &amp; Flattener</h4>
+          <p>Inspect and edit interactive form fields (field = value) or flatten forms.</p>
+          <textarea id="tool-form-fields" rows="3" class="mono" style="width:100%;font-size:11px;padding:5px;border:1px solid var(--border-subtle);border-radius:4px" placeholder="field_name = value"></textarea>
+          <div class="tool-actions">
+            <button id="tool-form-fill" class="btn btn-primary btn-sm">Fill &amp; Save</button>
+            <button id="tool-form-flatten" class="btn btn-secondary btn-sm">Flatten Form</button>
+          </div>
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>

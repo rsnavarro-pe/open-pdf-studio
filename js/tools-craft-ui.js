@@ -15,6 +15,8 @@ import {
   extractTablesToCsv,
   runWorkflowPipeline,
   unlockPdf,
+  inspectPdfFormFields,
+  fillOrFlattenPdfForm,
 } from './pdf-tools-extra.js';
 
 function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf) {
@@ -102,4 +104,24 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
     const pw = document.getElementById('tool-unlock-pw').value;
     return unlockPdf(buf, name, pw, setStatus);
   }, setStatus, runSafe, requireOpenPdf);
+
+  // AcroForm Inspector, Filler & Flattener
+  const formArea = document.getElementById('tool-form-fields');
+  const loadFormFields = async (buf) => {
+    if (!buf) return;
+    try {
+      const list = await inspectPdfFormFields(buf);
+      formArea.value = list.map((f) => `${f.name} = ${f.value}`).join('\n');
+      formArea.placeholder = list.length ? '' : 'No interactive AcroForm fields detected in this PDF.';
+    } catch (_) { /* ignore */ }
+  };
+  document.getElementById('btn-pdf-tools').addEventListener('click', () => loadFormFields(state.pdfBytes?.buffer));
+  document.getElementById('tool-form-fill').addEventListener('click', () => {
+    if (!requireOpenPdf(setStatus)) return;
+    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.buffer, state.pdfName, formArea.value, false, setStatus));
+  });
+  document.getElementById('tool-form-flatten').addEventListener('click', () => {
+    if (!requireOpenPdf(setStatus)) return;
+    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.buffer, state.pdfName, formArea.value, true, setStatus));
+  });
 }
