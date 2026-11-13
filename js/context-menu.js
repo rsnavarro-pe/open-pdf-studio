@@ -6,6 +6,7 @@ import { renderCurrentPage, fitPageWidth } from './pdf-engine.js';
 import { exportAnnotatedPdf } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { hitTestMarkup, screenToPdf } from './geometry.js';
+import { isDraftingMulti } from './overlay.js';
 
 export function initContextMenu() {
   const menu = document.getElementById('ctx-menu');
@@ -15,7 +16,7 @@ export function initContextMenu() {
   const closeMenu = () => menu.classList.add('hidden');
 
   scroller.addEventListener('contextmenu', (e) => {
-    if (!state.pdfBytes) return;
+    if (!state.pdfBytes || isDraftingMulti()) return;
     e.preventDefault();
 
     // If right-clicked over a markup, auto-select it

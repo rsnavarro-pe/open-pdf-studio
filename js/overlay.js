@@ -1,7 +1,7 @@
 /**
  * Interactive SVG annotation & measurement overlay controller.
  */
-import { state, addMarkup, notify } from './state.js';
+import { state, addMarkup, setTool, notify } from './state.js';
 import { buildStampPayload } from './stamps.js';
 import { drawStampSvg } from './stamp-renderer.js';
 import {
@@ -26,6 +26,21 @@ export function initOverlay(onCalibrate) {
   svgEl.addEventListener('pointermove', onPointerMove);
   svgEl.addEventListener('pointerup', onPointerUp);
   svgEl.addEventListener('dblclick', onDoubleClick);
+  svgEl.addEventListener('contextmenu', onRightClickFinish);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if (draft) {
+        draft = null;
+        renderOverlay();
+      } else if (state.activeTool !== 'select') {
+        setTool('select');
+      }
+    }
+  });
+}
+
+export function isDraftingMulti() {
+  return Boolean(draft && draft.multi);
 }
 
 function getPdfPointFromEvent(e) {
@@ -40,7 +55,7 @@ function toScreen(pt) {
 }
 
 function onPointerDown(e) {
-  if (!state.pdfBytes) return;
+  if (!state.pdfBytes || e.button !== 0) return;
   const tool = state.activeTool;
 
   if (tool === 'pan') {
@@ -171,6 +186,18 @@ function onPointerUp(e) {
 }
 
 function onDoubleClick() {
+  finishMultiDraft();
+}
+
+function onRightClickFinish(e) {
+  if (!draft || !draft.multi) return;
+  e.preventDefault();
+  e.stopPropagation();
+  finishMultiDraft();
+  setTool('select');
+}
+
+function finishMultiDraft() {
   if (!draft || !draft.multi) return;
   const pts = draft.points.slice(0, -1);
   const type = draft.type;
