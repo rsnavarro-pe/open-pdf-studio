@@ -2,6 +2,7 @@
  * Export annotated PDF (via pdf-lib) and CSV takeoff report.
  */
 import { state } from './state.js';
+import { drawStampPdf } from './stamp-renderer.js';
 import {
   distPt, polylineLength, polygonPerimeter, polygonArea,
   formatLength, formatArea, buildRevisionCloudPath,
@@ -70,14 +71,8 @@ export async function exportAnnotatedPdf() {
     } else if (m.type === 'text' && m.points.length >= 1) {
       page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: 12, font, color });
     } else if (m.type === 'stamp' && m.points.length >= 1) {
-      const p = m.points[0];
-      const txt = m.text || 'APPROVED';
-      const w = txt.length * 8 + 18;
-      page.drawRectangle({
-        x: p.x - w / 2, y: toPdfY(p.y) - 12, width: w, height: 24,
-        borderColor: color, borderWidth: 2,
-      });
-      page.drawText(txt, { x: p.x - w / 2 + 9, y: toPdfY(p.y) - 4, size: 11, font, color });
+      const stamp = m.stampData || { kind: 'badge', id: m.text || 'APPROVED', color: m.color };
+      drawStampPdf(page, m.points[0], stamp, font, rgb, hexToRgb);
     }
   }
 

@@ -12,6 +12,7 @@ import { generateSamplePdfBytes } from './sample-pdf.js';
 import { initOverlay } from './overlay.js';
 import { exportAnnotatedPdf, exportTakeoffCsv } from './exporter.js';
 import { initPdfTools } from './tools-ui.js';
+import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
 
 let pendingCalibratePtSpan = 0;
@@ -114,8 +115,18 @@ function bindPropertyEvents() {
   document.getElementById('prop-width').addEventListener('input', (e) => {
     state.lineWidth = Number(e.target.value) || 2;
   });
-  document.getElementById('prop-stamp').addEventListener('change', (e) => {
+  const stampSel = document.getElementById('prop-stamp');
+  stampSel.innerHTML = '';
+  for (const s of EMBEDDED_STAMPS) {
+    const opt = document.createElement('option');
+    opt.value = s.id;
+    opt.textContent = s.label;
+    stampSel.appendChild(opt);
+  }
+  stampSel.value = state.stampType;
+  stampSel.addEventListener('change', (e) => {
     state.stampType = e.target.value;
+    setTool('stamp');
   });
 }
 

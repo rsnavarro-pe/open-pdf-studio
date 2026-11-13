@@ -2,6 +2,8 @@
  * Interactive SVG annotation & measurement overlay controller.
  */
 import { state, addMarkup, notify } from './state.js';
+import { buildStampPayload } from './stamps.js';
+import { drawStampSvg } from './stamp-renderer.js';
 import {
   screenToPdf, pdfToScreen, distPt, polylineLength,
   polygonPerimeter, polygonArea, formatLength, formatArea,
@@ -57,16 +59,31 @@ function onPointerDown(e) {
     return;
   }
 
-  if (tool === 'text' || tool === 'stamp') {
-    const text = tool === 'text' ? window.prompt('Enter annotation text:', 'NOTE: Verify field dimension') : state.stampType;
+  if (tool === 'text') {
+    const text = window.prompt('Enter annotation text:', 'NOTE: Verify field dimension');
     if (!text) return;
     addMarkup({
       id: crypto.randomUUID(),
       page: state.currentPage,
-      type: tool,
+      type: 'text',
       points: [pt],
       text,
       color: state.strokeColor,
+      lineWidth: state.lineWidth,
+    });
+    return;
+  }
+
+  if (tool === 'stamp') {
+    const stampData = buildStampPayload(state.stampType);
+    addMarkup({
+      id: crypto.randomUUID(),
+      page: state.currentPage,
+      type: 'stamp',
+      points: [pt],
+      text: stampData.label,
+      stampData,
+      color: stampData.color || state.strokeColor,
       lineWidth: state.lineWidth,
     });
     return;
@@ -252,14 +269,8 @@ function drawMarkup(m, isSelected, isDraft = false) {
     t.textContent = m.text;
     g.appendChild(t);
   } else if (m.type === 'stamp') {
-    const box = createSvg('g', { transform: `translate(${pts[0].x}, ${pts[0].y}) rotate(-8)` });
-    const w = (m.text.length * 9 + 20) * state.zoom;
-    const h = 26 * state.zoom;
-    box.appendChild(createSvg('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 4, fill: 'none', stroke, 'stroke-width': 2.5 }));
-    const t = createSvg('text', { x: 0, y: 4 * state.zoom, 'text-anchor': 'middle', fill: stroke, 'font-size': 12 * state.zoom, 'font-weight': '700' });
-    t.textContent = m.text;
-    box.appendChild(t);
-    g.appendChild(box);
+    const stamp = m.stampData || { kind: 'badge', id: m.text, color: stroke };
+    drawStampSvg(g, pts[0], stamp, state.zoom, createSvg);
   }
 
   svgEl.appendChild(g);
