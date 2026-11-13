@@ -3,29 +3,30 @@
  */
 import { triggerDownload } from './pdf-tools-org.js';
 
-export async function pdfToImages(arrayBuffer, baseName, format, onStatus) {
+export async function pdfToImages(arrayBuffer, baseName, format, onStatus, dpi = 300) {
   const doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer).slice() }).promise;
   const cleanName = baseName.replace(/\.pdf$/i, '');
   const mime = format === 'png' ? 'image/png' : 'image/jpeg';
   const ext = format === 'png' ? 'png' : 'jpg';
+  const targetScale = Math.max(1, (Number(dpi) || 300) / 72);
 
   if (doc.numPages === 1) {
-    onStatus(`Rendering page 1 to ${ext.toUpperCase()}...`);
-    const blob = await renderPageBlob(doc, 1, mime, 2.0);
+    onStatus(`Rendering page 1 at ${dpi} DPI to ${ext.toUpperCase()}...`);
+    const blob = await renderPageBlob(doc, 1, mime, targetScale);
     triggerDownload(blob, `${cleanName}_page_1.${ext}`);
-    onStatus(`Exported ${cleanName}_page_1.${ext}.`);
+    onStatus(`Exported ${cleanName}_page_1.${ext} (${dpi} DPI).`);
     return;
   }
 
   const zip = new window.JSZip();
   for (let p = 1; p <= doc.numPages; p++) {
-    onStatus(`Rendering page ${p} / ${doc.numPages} to ${ext.toUpperCase()}...`);
-    const blob = await renderPageBlob(doc, p, mime, 2.0);
+    onStatus(`Rendering page ${p} / ${doc.numPages} at ${dpi} DPI to ${ext.toUpperCase()}...`);
+    const blob = await renderPageBlob(doc, p, mime, targetScale);
     zip.file(`${cleanName}_page_${p}.${ext}`, blob);
   }
   const zipBlob = await zip.generateAsync({ type: 'blob' });
   triggerDownload(zipBlob, `${cleanName}_${ext}_pages.zip`);
-  onStatus(`Exported ${doc.numPages} pages to ${cleanName}_${ext}_pages.zip.`);
+  onStatus(`Exported ${doc.numPages} pages at ${dpi} DPI to ${cleanName}_${ext}_pages.zip.`);
 }
 
 export async function pdfToPptx(arrayBuffer, baseName, onStatus) {
@@ -79,14 +80,24 @@ export async function pdfToDocx(arrayBuffer, baseName, onStatus) {
   onStatus(`Exported text from ${doc.numPages} page(s) to ${cleanName}.docx.`);
 }
 
-async function renderPageBlob(doc, pageNum, mime, scale) {
+async function renderPageBlob(doc, pageNum, mime, targetScale) {
   const page = await doc.getPage(pageNum);
+  const orig = page.getViewport({ scale: 1 });
+  const maxDim = 12000;
+  const maxPx = 80_000_000;
+  const dimCap = maxDim / Math.max(orig.width, orig.height);
+  const pxCap = Math.sqrt(maxPx / Math.max(1, orig.width * orig.height));
+  const scale = Math.max(1, Math.min(targetScale, dimCap, pxCap));
+
   const vp = page.getViewport({ scale });
   const canvas = document.createElement('canvas');
-  canvas.width = vp.width;
-  canvas.height = vp.height;
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport: vp }).promise;
-  return await new Promise((res) => canvas.toBlob(res, mime, 0.92));
+  canvas.width = Math.floor(vp.width);
+  canvas.height = Math.floor(vp.height);
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  await page.render({ canvasContext: ctx, viewport: vp, intent: 'print' }).promise;
+  return await new Promise((res) => canvas.toBlob(res, mime, 0.95));
 }
 
 function groupTextByLine(items) {

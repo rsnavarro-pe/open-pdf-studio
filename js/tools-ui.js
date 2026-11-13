@@ -129,7 +129,8 @@ export function initPdfTools() {
   // PDF -> JPG / PNG
   const runPdf2Img = (buf, name) => {
     const fmt = document.getElementById('tool-img-format').value;
-    return runSafe(setStatus, () => pdfToImages(buf, name, fmt, setStatus));
+    const dpi = Number(document.getElementById('tool-img-dpi').value) || 300;
+    return runSafe(setStatus, () => pdfToImages(buf, name, fmt, setStatus, dpi));
   };
   document.getElementById('tool-pdf2img-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;

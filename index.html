@@ -377,11 +377,18 @@
         <div class="tool-card">
           <div class="tool-cat">CONVERT FROM PDF</div>
           <h4>PDF to JPG / PNG</h4>
-          <p>Export pages as images (ZIP if multi-page).</p>
-          <select id="tool-img-format">
-            <option value="jpeg">JPG (JPEG)</option>
-            <option value="png">PNG (Lossless)</option>
-          </select>
+          <p>Export crisp high-DPI page images (ZIP if multi-page).</p>
+          <div class="tool-actions">
+            <select id="tool-img-format" style="flex:1">
+              <option value="jpeg">JPG (JPEG)</option>
+              <option value="png">PNG (Lossless)</option>
+            </select>
+            <select id="tool-img-dpi" style="flex:1">
+              <option value="150">150 DPI</option>
+              <option value="300" selected>300 DPI (Sharp)</option>
+              <option value="600">600 DPI (Ultra)</option>
+            </select>
+          </div>
           <div class="tool-actions">
             <button id="tool-pdf2img-current" class="btn btn-primary btn-sm">Use Open PDF</button>
             <label class="btn btn-secondary btn-sm" for="tool-pdf2img-input">Pick File</label>
