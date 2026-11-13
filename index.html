@@ -360,6 +360,30 @@
             <input id="tool-ocr-input" type="file" accept="application/pdf" hidden />
           </div>
         </div>
+
+        <!-- CAD DXF -->
+        <div class="tool-card">
+          <div class="tool-cat">CAD / DXF</div>
+          <h4>PDF to CAD (.dxf)</h4>
+          <p>Export native PDF vectors &amp; text to AutoCAD DXF (opens in AutoCAD/Civil 3D).</p>
+          <select id="tool-dxf-scope">
+            <option value="single">Current Drawing (.dxf)</option>
+            <option value="all">Full Drawing Set (.zip)</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-pdf2dxf-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-pdf2dxf-input">Pick File</label>
+            <input id="tool-pdf2dxf-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">CAD / DXF</div>
+          <h4>DXF to PDF</h4>
+          <p>Convert an ASCII .dxf CAD drawing back into a vector PDF.</p>
+          <label class="btn btn-primary btn-sm" for="tool-dxf2pdf-input">Select .dxf File</label>
+          <input id="tool-dxf2pdf-input" type="file" accept=".dxf" hidden />
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>

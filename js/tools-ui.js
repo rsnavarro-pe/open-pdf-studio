@@ -2,9 +2,11 @@
  * UI bindings for the PDF Tools modal (Organize, Optimize, Convert).
  */
 import { state } from './state.js';
-import { mergePdfs, splitPdf, compressPdf, imagesToPdf } from './pdf-tools-org.js';
+import { mergePdfs, splitPdf, compressPdf, imagesToPdf, triggerDownload } from './pdf-tools-org.js';
 import { pdfToImages, pdfToPptx, pdfToDocx } from './pdf-tools-export.js';
 import { runOcrPdf } from './pdf-tools-ocr.js';
+import { exportPdfToDxf } from './pdf-to-dxf.js';
+import { dxfTextToPdfBytes } from './dxf-to-pdf.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -120,6 +122,38 @@ export function initPdfTools() {
   document.getElementById('tool-ocr-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
     if (f) await runOcr(await f.arrayBuffer(), f.name);
+    e.target.value = '';
+  });
+
+  // PDF -> DXF (Single or Drawing Set)
+  const runPdf2Dxf = (buf, name) => {
+    const scope = document.getElementById('tool-dxf-scope').value;
+    return runSafe(setStatus, () => exportPdfToDxf(
+      buf, name, scope, state.currentPage, state.unitsPerPt, setStatus,
+    ));
+  };
+  document.getElementById('tool-pdf2dxf-current').addEventListener('click', () => {
+    if (!requireOpenPdf(setStatus)) return;
+    runPdf2Dxf(state.pdfBytes.buffer, state.pdfName);
+  });
+  document.getElementById('tool-pdf2dxf-input').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (f) await runPdf2Dxf(await f.arrayBuffer(), f.name);
+    e.target.value = '';
+  });
+
+  // DXF -> PDF
+  document.getElementById('tool-dxf2pdf-input').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    await runSafe(setStatus, async () => {
+      setStatus(`Converting ${f.name} to PDF...`);
+      const dxfText = await f.text();
+      const bytes = await dxfTextToPdfBytes(dxfText, window.PDFLib);
+      const outName = f.name.replace(/\.dxf$/i, '') + '.pdf';
+      triggerDownload(new Blob([bytes], { type: 'application/pdf' }), outName);
+      setStatus(`Converted ${f.name} to ${outName}.`);
+    });
     e.target.value = '';
   });
 }
