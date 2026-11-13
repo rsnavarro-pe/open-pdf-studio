@@ -24,7 +24,8 @@ const TOOL_HINTS = {
   arrow: 'Click and drag to draw a leader arrow.',
   rect: 'Click and drag to draw a rectangle.',
   pen: 'Click and drag to draw freehand.',
-  highlight: 'Click and drag to highlight over drawing text or lines.',
+  highlight: 'Click and drag to highlight (choose colors in Highlight / Note palette).',
+  note: 'Click anywhere on the sheet to place a sticky note comment (double-click to edit).',
   text: 'Click anywhere on the sheet to place a text note.',
   stamp: 'Click anywhere on the sheet to place the selected stamp.',
 };

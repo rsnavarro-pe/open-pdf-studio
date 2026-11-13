@@ -18,6 +18,7 @@ export const state = {
 
   // Style defaults
   strokeColor: '#c0392b',
+  highlightColor: '#facc15',
   lineWidth: 2,
   stampType: 'RSN APPROVED',
 

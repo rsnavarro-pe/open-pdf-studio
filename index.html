@@ -75,6 +75,7 @@
           <button class="tool-btn" data-tool="rect" title="Rectangle">Rect</button>
           <button class="tool-btn" data-tool="pen" title="Freehand Pen">Pen</button>
           <button class="tool-btn" data-tool="highlight" title="Highlighter">Highlight</button>
+          <button class="tool-btn" data-tool="note" title="Sticky Note Comment (N)">Note</button>
           <button class="tool-btn" data-tool="text" title="Text Note (T)">Text</button>
           <button class="tool-btn" data-tool="stamp" title="Engineering Stamp">Stamp</button>
         </div>
@@ -224,6 +225,18 @@
           <div class="prop-row">
             <label for="prop-color">Stroke Color</label>
             <input id="prop-color" type="color" value="#c0392b" />
+          </div>
+          <div class="prop-row">
+            <label for="prop-highlight-color">Highlight / Note</label>
+            <div class="swatch-row">
+              <button type="button" class="hi-swatch active" data-color="#facc15" style="background:#facc15" title="Yellow"></button>
+              <button type="button" class="hi-swatch" data-color="#4ade80" style="background:#4ade80" title="Green"></button>
+              <button type="button" class="hi-swatch" data-color="#38bdf8" style="background:#38bdf8" title="Blue"></button>
+              <button type="button" class="hi-swatch" data-color="#f472b6" style="background:#f472b6" title="Pink"></button>
+              <button type="button" class="hi-swatch" data-color="#fb923c" style="background:#fb923c" title="Orange"></button>
+              <button type="button" class="hi-swatch" data-color="#c084fc" style="background:#c084fc" title="Purple"></button>
+              <input id="prop-highlight-color" type="color" value="#facc15" title="Custom highlight/note color" />
+            </div>
           </div>
           <div class="prop-row">
             <label for="prop-width">Line Width</label>

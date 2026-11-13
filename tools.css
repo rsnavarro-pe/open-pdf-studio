@@ -226,3 +226,24 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+.swatch-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.hi-swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(44, 44, 46, 0.3);
+  cursor: pointer;
+  padding: 0;
+}
+
+.hi-swatch.active {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 1px;
+}

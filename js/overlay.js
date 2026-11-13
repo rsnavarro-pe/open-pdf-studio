@@ -46,7 +46,7 @@ export function isDraftingMulti() {
 function getPdfPointFromEvent(e, applySnap = true) {
   const rect = svgEl.getBoundingClientRect();
   const raw = screenToPdf(e.clientX - rect.left, e.clientY - rect.top, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
-  if (applySnap && state.osnap && !['select', 'pan', 'pen', 'highlight'].includes(state.activeTool)) {
+  if (applySnap && state.osnap && !['select', 'pan', 'pen', 'highlight', 'note'].includes(state.activeTool)) {
     const res = findNearestSnap(raw, state.snapPoints, 10 / state.zoom);
     activeSnapPt = res.snapped ? res.pt : null;
     return res.pt;
@@ -88,6 +88,13 @@ function onPointerDown(e) {
     const text = window.prompt('Enter annotation text:', 'NOTE: Verify field dimension');
     if (!text) return;
     addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'text', points: [pt], text, color: state.strokeColor, lineWidth: state.lineWidth });
+    return;
+  }
+
+  if (tool === 'note') {
+    const text = window.prompt('Sticky note comment:', '');
+    if (!text || !text.trim()) return;
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'note', points: [pt], text: text.trim(), color: state.highlightColor, lineWidth: state.lineWidth });
     return;
   }
 
@@ -177,7 +184,8 @@ function onPointerUp() {
     const type = draft.type;
     draft = null;
     if (pts.length >= 2) {
-      addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, color: state.strokeColor, lineWidth: state.lineWidth });
+      const color = type === 'highlight' ? state.highlightColor : state.strokeColor;
+      addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, color, lineWidth: state.lineWidth });
     } else renderOverlay();
     return;
   }
@@ -201,9 +209,9 @@ function onDoubleClick(e) {
   if (draft && draft.multi) { finishMultiDraft(); return; }
   if (state.activeTool === 'select' && state.selectedId) {
     const m = state.markups.find((x) => x.id === state.selectedId);
-    if (m && (m.type === 'text' || m.type === 'callout')) {
+    if (m && (m.type === 'text' || m.type === 'callout' || m.type === 'note')) {
       e.preventDefault();
-      const updated = window.prompt('Edit label:', m.text || '');
+      const updated = window.prompt(m.type === 'note' ? 'Edit sticky note comment:' : 'Edit label:', m.text || '');
       if (updated !== null && updated.trim()) {
         pushHistory();
         m.text = updated.trim();

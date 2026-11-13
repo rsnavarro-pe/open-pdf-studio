@@ -55,7 +55,7 @@ export async function exportAnnotatedPdf() {
       page.drawText(`${prefix}${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`, { x: cx - 20, y: toPdfY(cy), size: 10, font, color });
     } else if ((m.type === 'pen' || m.type === 'highlight') && m.points.length >= 2) {
       const isHi = m.type === 'highlight';
-      const hiColor = isHi && (m.color || '#c0392b') === '#c0392b' ? rgb(0.98, 0.8, 0.08) : color;
+      const hiColor = isHi ? hexToRgb(m.color || '#facc15') : color;
       for (let i = 1; i < m.points.length; i++) {
         page.drawLine({
           start: { x: m.points[i - 1].x, y: toPdfY(m.points[i - 1].y) },
@@ -79,6 +79,14 @@ export async function exportAnnotatedPdf() {
       const svgPath = buildRevisionCloudPath(m.points[0], m.points[1], 14);
       if (svgPath) {
         page.drawSvgPath(svgPath, { x: 0, y: height, borderColor: color, borderWidth: sw });
+      }
+    } else if (m.type === 'note' && m.points.length >= 1) {
+      const p = m.points[0];
+      const py = toPdfY(p.y);
+      const noteCol = hexToRgb(m.color || '#facc15');
+      page.drawRectangle({ x: p.x - 8, y: py - 8, width: 16, height: 16, color: noteCol, borderColor: rgb(0.17, 0.17, 0.18), borderWidth: 1 });
+      if (m.text) {
+        page.drawText(m.text, { x: p.x + 12, y: py - 4, size: 10, font, color: rgb(0.17, 0.17, 0.18) });
       }
     } else if (m.type === 'text' && m.points.length >= 1) {
       page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: 12, font, color });

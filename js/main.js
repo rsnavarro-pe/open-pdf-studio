@@ -154,6 +154,20 @@ function bindPropertyEvents() {
   document.getElementById('prop-color').addEventListener('input', (e) => {
     state.strokeColor = e.target.value;
   });
+  const setHighlightColor = (hex) => {
+    state.highlightColor = hex;
+    document.getElementById('prop-highlight-color').value = hex;
+    document.querySelectorAll('.hi-swatch').forEach((b) => b.classList.toggle('active', b.dataset.color === hex));
+    const sel = state.selectedId ? state.markups.find((m) => m.id === state.selectedId) : null;
+    if (sel && (sel.type === 'highlight' || sel.type === 'note')) {
+      sel.color = hex;
+      notify();
+    }
+  };
+  document.getElementById('prop-highlight-color').addEventListener('input', (e) => setHighlightColor(e.target.value));
+  document.querySelectorAll('.hi-swatch').forEach((btn) => {
+    btn.addEventListener('click', () => setHighlightColor(btn.dataset.color));
+  });
   document.getElementById('prop-width').addEventListener('input', (e) => {
     state.lineWidth = Number(e.target.value) || 2;
   });
