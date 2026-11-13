@@ -310,7 +310,15 @@
         <div class="tool-card">
           <div class="tool-cat">ORGANIZE PDF</div>
           <h4>Merge PDF</h4>
-          <p>Combine multiple PDF files into one document.</p>
+          <p id="tool-merge-desc">Combine multiple PDFs sequentially, interleaved, or capped by pages/size.</p>
+          <select id="tool-merge-mode">
+            <option value="sequential">All Pages (Sequential)</option>
+            <option value="interleave">Alternate / Interleave Pages</option>
+            <option value="page-range">Same Page Range from Each</option>
+            <option value="max-pages">Cap Output by Page Count</option>
+            <option value="max-size">Cap Output by File Size (MB)</option>
+          </select>
+          <input id="tool-merge-param" type="text" class="hidden" placeholder="Value" />
           <label class="btn btn-primary btn-sm" for="tool-merge-input">Select PDFs to Merge</label>
           <input id="tool-merge-input" type="file" accept="application/pdf" multiple hidden />
         </div>
@@ -318,8 +326,15 @@
         <div class="tool-card">
           <div class="tool-cat">ORGANIZE PDF</div>
           <h4>Split PDF</h4>
-          <p>Extract page range (e.g. 1-2) or split all pages to ZIP.</p>
-          <input id="tool-split-range" type="text" placeholder="Range (e.g. 1-3) or blank = all" />
+          <p id="tool-split-desc">Split by page range, fixed page count, equal parts, file size, or odd/even.</p>
+          <select id="tool-split-mode">
+            <option value="range">Page Range / All Pages (ZIP)</option>
+            <option value="every-n">Every N Pages</option>
+            <option value="equal-parts">Into N Equal Parts</option>
+            <option value="max-size">By Max File Size (MB)</option>
+            <option value="odd-even">Odd &amp; Even Pages</option>
+          </select>
+          <input id="tool-split-param" type="text" placeholder="Range (e.g. 1-3,5) or blank = all" />
           <div class="tool-actions">
             <button id="tool-split-current" class="btn btn-primary btn-sm">Use Open PDF</button>
             <label class="btn btn-secondary btn-sm" for="tool-split-input">Pick File</label>

@@ -1,6 +1,16 @@
 /**
  * Client-side PDF Organize, Optimize, and Image-to-PDF tools.
  */
+import {
+  saveSubset,
+  chunkByGroups,
+  chunkByMaxSize,
+  exportChunks,
+  groupEveryN,
+  groupEqualParts,
+  parsePositiveInt,
+  parsePositiveFloat,
+} from './pdf-tools-chunk.js';
 
 export function triggerDownload(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -11,51 +21,104 @@ export function triggerDownload(blob, filename) {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
-export async function mergePdfs(files, onStatus) {
+export async function mergePdfs(files, options, onStatus) {
+  if (typeof options === 'function') { onStatus = options; options = {}; }
+  const { mode = 'sequential', param = '' } = options || {};
   const { PDFDocument } = window.PDFLib;
   const merged = await PDFDocument.create();
+  const docs = [];
+
   for (let i = 0; i < files.length; i++) {
-    onStatus(`Merging ${i + 1}/${files.length}: ${files[i].name}...`);
-    const bytes = await files[i].arrayBuffer();
-    const src = await PDFDocument.load(bytes);
-    const copied = await merged.copyPages(src, src.getPageIndices());
-    copied.forEach((p) => merged.addPage(p));
+    onStatus(`Loading ${i + 1}/${files.length}: ${files[i].name}...`);
+    docs.push(await PDFDocument.load(await files[i].arrayBuffer()));
   }
+
+  if (mode === 'interleave') {
+    const maxLen = Math.max(...docs.map((d) => d.getPageCount()));
+    for (let p = 0; p < maxLen; p++) {
+      for (const src of docs) {
+        if (p < src.getPageCount()) {
+          const [page] = await merged.copyPages(src, [p]);
+          merged.addPage(page);
+        }
+      }
+    }
+  } else if (mode === 'page-range') {
+    if (!(param || '').trim()) throw new Error('Enter a page range (e.g. 1-2, 4).');
+    for (const src of docs) {
+      const indices = parsePageRanges(param, src.getPageCount());
+      if (indices?.length) {
+        (await merged.copyPages(src, indices)).forEach((p) => merged.addPage(p));
+      }
+    }
+    if (!merged.getPageCount()) throw new Error('No pages matched that range.');
+  } else {
+    for (const src of docs) {
+      (await merged.copyPages(src, src.getPageIndices())).forEach((p) => merged.addPage(p));
+    }
+  }
+
+  const allIndices = merged.getPageIndices();
+  if (mode === 'max-pages') {
+    const n = parsePositiveInt(param, 'max pages per output PDF');
+    const chunks = await chunkByGroups(merged, groupEveryN(allIndices, n), 'merged', onStatus);
+    return exportChunks(chunks, 'merged_by_pages', onStatus, triggerDownload);
+  }
+  if (mode === 'max-size') {
+    const mb = parsePositiveFloat(param, 'max size in MB');
+    const chunks = await chunkByMaxSize(merged, allIndices, mb, 'merged', onStatus);
+    return exportChunks(chunks, 'merged_by_size', onStatus, triggerDownload);
+  }
+
   const out = await merged.save({ useObjectStreams: true });
-  triggerDownload(new Blob([out], { type: 'application/pdf' }), 'merged_document.pdf');
-  onStatus(`Merged ${files.length} PDFs (${merged.getPageCount()} pages).`);
+  const outName = mode === 'interleave' ? 'merged_interleaved.pdf' : 'merged_document.pdf';
+  triggerDownload(new Blob([out], { type: 'application/pdf' }), outName);
+  onStatus(`Merged ${files.length} PDFs (${merged.getPageCount()} pages) into ${outName}.`);
 }
 
-export async function splitPdf(arrayBuffer, baseName, rangeText, onStatus) {
+export async function splitPdf(arrayBuffer, baseName, options, onStatus) {
+  const opts = typeof options === 'string' ? { mode: 'range', param: options } : (options || {});
+  const { mode = 'range', param = '' } = opts;
   const { PDFDocument } = window.PDFLib;
   const src = await PDFDocument.load(arrayBuffer);
   const total = src.getPageCount();
   const cleanName = baseName.replace(/\.pdf$/i, '');
+  const allIndices = src.getPageIndices();
 
-  const indices = parsePageRanges(rangeText, total);
+  if (mode === 'every-n') {
+    const n = parsePositiveInt(param, 'pages per file');
+    const chunks = await chunkByGroups(src, groupEveryN(allIndices, n), cleanName, onStatus);
+    return exportChunks(chunks, `${cleanName}_split_${n}p`, onStatus, triggerDownload);
+  }
+  if (mode === 'equal-parts') {
+    const parts = Math.min(total, parsePositiveInt(param, 'number of parts'));
+    const chunks = await chunkByGroups(src, groupEqualParts(allIndices, parts), cleanName, onStatus);
+    return exportChunks(chunks, `${cleanName}_${parts}_parts`, onStatus, triggerDownload);
+  }
+  if (mode === 'max-size') {
+    const mb = parsePositiveFloat(param, 'max size in MB');
+    const chunks = await chunkByMaxSize(src, allIndices, mb, cleanName, onStatus);
+    return exportChunks(chunks, `${cleanName}_by_size`, onStatus, triggerDownload);
+  }
+  if (mode === 'odd-even') {
+    const odd = allIndices.filter((i) => i % 2 === 0);
+    const even = allIndices.filter((i) => i % 2 === 1);
+    const chunks = [];
+    if (odd.length) chunks.push({ name: `${cleanName}_odd_pages.pdf`, bytes: await saveSubset(src, odd) });
+    if (even.length) chunks.push({ name: `${cleanName}_even_pages.pdf`, bytes: await saveSubset(src, even) });
+    return exportChunks(chunks, `${cleanName}_odd_even`, onStatus, triggerDownload);
+  }
+
+  const indices = parsePageRanges(param, total);
   if (indices) {
     onStatus(`Extracting ${indices.length} page(s)...`);
-    const outDoc = await PDFDocument.create();
-    const pages = await outDoc.copyPages(src, indices);
-    pages.forEach((p) => outDoc.addPage(p));
-    const bytes = await outDoc.save();
-    triggerDownload(new Blob([bytes], { type: 'application/pdf' }), `${cleanName}_extracted.pdf`);
+    triggerDownload(new Blob([await saveSubset(src, indices)], { type: 'application/pdf' }), `${cleanName}_extracted.pdf`);
     onStatus(`Extracted ${indices.length} page(s) to ${cleanName}_extracted.pdf.`);
     return;
   }
 
-  // Split every page into a ZIP
-  const zip = new window.JSZip();
-  for (let i = 0; i < total; i++) {
-    onStatus(`Splitting page ${i + 1} / ${total}...`);
-    const single = await PDFDocument.create();
-    const [page] = await single.copyPages(src, [i]);
-    single.addPage(page);
-    zip.file(`${cleanName}_page_${i + 1}.pdf`, await single.save());
-  }
-  const zipBlob = await zip.generateAsync({ type: 'blob' });
-  triggerDownload(zipBlob, `${cleanName}_split_pages.zip`);
-  onStatus(`Split ${total} pages into ${cleanName}_split_pages.zip.`);
+  const chunks = await chunkByGroups(src, allIndices.map((i) => [i]), `${cleanName}_page`, onStatus, true);
+  return exportChunks(chunks, `${cleanName}_split_pages`, onStatus, triggerDownload);
 }
 
 export async function compressPdf(arrayBuffer, baseName, qualityPercent, onStatus) {

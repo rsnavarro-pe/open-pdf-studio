@@ -24,17 +24,43 @@ export function initPdfTools() {
   });
 
   // Merge PDF
+  const mergeModeEl = document.getElementById('tool-merge-mode');
+  const mergeParamEl = document.getElementById('tool-merge-param');
+  const mergePlaceholders = {
+    'page-range': 'Pages from each PDF (e.g. 1-2, 4)',
+    'max-pages': 'Max pages per output PDF (e.g. 25)',
+    'max-size': 'Max output size in MB (e.g. 5)',
+  };
+  mergeModeEl.addEventListener('change', () => {
+    const ph = mergePlaceholders[mergeModeEl.value];
+    mergeParamEl.classList.toggle('hidden', !ph);
+    if (ph) { mergeParamEl.placeholder = ph; mergeParamEl.value = ''; }
+  });
   document.getElementById('tool-merge-input').addEventListener('change', async (e) => {
     const files = [...(e.target.files || [])];
     if (files.length < 2) { setStatus('Select at least 2 PDFs to merge.'); return; }
-    await runSafe(setStatus, () => mergePdfs(files, setStatus));
+    const opts = { mode: mergeModeEl.value, param: mergeParamEl.value };
+    await runSafe(setStatus, () => mergePdfs(files, opts, setStatus));
     e.target.value = '';
   });
 
   // Split PDF
+  const splitModeEl = document.getElementById('tool-split-mode');
+  const splitParamEl = document.getElementById('tool-split-param');
+  const splitPlaceholders = {
+    range: 'Range (e.g. 1-3,5) or blank = all',
+    'every-n': 'Pages per file (e.g. 5)',
+    'equal-parts': 'Number of parts (e.g. 3)',
+    'max-size': 'Max file size in MB (e.g. 2)',
+  };
+  splitModeEl.addEventListener('change', () => {
+    const ph = splitPlaceholders[splitModeEl.value];
+    splitParamEl.classList.toggle('hidden', !ph);
+    if (ph) { splitParamEl.placeholder = ph; splitParamEl.value = ''; }
+  });
   const runSplit = (buf, name) => {
-    const range = document.getElementById('tool-split-range').value;
-    return runSafe(setStatus, () => splitPdf(buf, name, range, setStatus));
+    const opts = { mode: splitModeEl.value, param: splitParamEl.value };
+    return runSafe(setStatus, () => splitPdf(buf, name, opts, setStatus));
   };
   document.getElementById('tool-split-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
