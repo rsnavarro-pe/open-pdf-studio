@@ -38,10 +38,13 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
   if (['distance', 'calibrate', 'arrow', 'callout', 'underline', 'strike'].includes(m.type)) {
     const [a, b] = pts;
     if (m.type === 'callout') {
-      const kneeX = a.x + (b.x >= a.x ? 20 * state.zoom : -20 * state.zoom);
-      const knee = { x: kneeX, y: a.y };
-      g.appendChild(createSvg('polyline', { points: `${a.x},${a.y} ${knee.x},${knee.y} ${b.x},${b.y}`, fill: 'none', stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
-      drawArrowHeadSvg(g, knee, b, arrStyle, arrSize, stroke, sw, createSvg);
+      for (let i = 1; i < pts.length; i++) {
+        const tip = pts[i];
+        const kneeX = a.x + (tip.x >= a.x ? 20 * state.zoom : -20 * state.zoom);
+        const knee = { x: kneeX, y: a.y };
+        g.appendChild(createSvg('polyline', { points: `${a.x},${a.y} ${knee.x},${knee.y} ${tip.x},${tip.y}`, fill: 'none', stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
+        drawArrowHeadSvg(g, knee, tip, arrStyle, arrSize, stroke, sw, createSvg);
+      }
       const lbl = m.text || 'CALLOUT';
       const bw = Math.max(46, lbl.length * (fSize * 0.58) + 16);
       const bh = fSize + 10;
@@ -50,12 +53,15 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
       const ct = createSvg('text', { x: bx + bw / 2, y: a.y + fSize * 0.34, 'text-anchor': 'middle', fill: m.color || '#2C2C2E', 'font-family': fontFam, 'font-size': fSize, 'font-weight': fWeight, 'font-style': fStyle });
       ct.textContent = lbl;
       g.appendChild(ct);
+    } else if (m.type === 'arrow') {
+      for (let i = 1; i < pts.length; i++) {
+        const tip = pts[i];
+        g.appendChild(createSvg('line', { x1: a.x, y1: a.y, x2: tip.x, y2: tip.y, stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
+        drawArrowHeadSvg(g, a, tip, arrStyle, arrSize, stroke, sw, createSvg);
+        if (arrStyle === 'both' && i === 1) drawArrowHeadSvg(g, tip, a, 'closed', arrSize, stroke, sw, createSvg);
+      }
     } else {
       g.appendChild(createSvg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
-      if (m.type === 'arrow') {
-        drawArrowHeadSvg(g, a, b, arrStyle, arrSize, stroke, sw, createSvg);
-        if (arrStyle === 'both') drawArrowHeadSvg(g, b, a, 'closed', arrSize, stroke, sw, createSvg);
-      }
       if (m.type === 'distance' || m.type === 'calibrate') {
         drawArrowHeadSvg(g, a, b, 'slash', 8 * state.zoom, stroke, sw, createSvg);
         drawArrowHeadSvg(g, b, a, 'slash', 8 * state.zoom, stroke, sw, createSvg);

@@ -13,6 +13,7 @@ export const state = {
 
   activeTool: 'select', // select | pan | calibrate | distance | perimeter | area | count | cloud | callout | arrow | rect | text | stamp
   selectedId: null,
+  addingLeaderToId: null,
   osnap: true,
   snapPoints: [],
 
@@ -67,6 +68,7 @@ export function notify() {
 
 export function setTool(tool) {
   state.activeTool = tool;
+  state.addingLeaderToId = null;
   if (tool !== 'select') state.selectedId = null;
   notify();
 }

@@ -36,6 +36,16 @@ function getSelectedMarkup() {
   return state.markups.find((m) => m.id === state.selectedId) || null;
 }
 
+export function startAddLeader() {
+  const sel = getSelectedMarkup();
+  if (!sel || (sel.type !== 'arrow' && sel.type !== 'callout')) return;
+  state.activeTool = 'select';
+  state.addingLeaderToId = sel.id;
+  const hint = document.getElementById('tool-hint');
+  if (hint) hint.textContent = 'Click on the sheet to place a new leader arrow tip attached to this annotation (Esc to cancel).';
+  notify();
+}
+
 function applyToSelected(mutator) {
   const sel = getSelectedMarkup();
   if (!sel) return;
@@ -114,6 +124,7 @@ export function initMarkupProps() {
     state.arrowSize = Math.max(5, Math.min(32, Number(e.target.value) || 11));
     applyToSelected((m) => { m.arrowSize = state.arrowSize; });
   });
+  document.getElementById('btn-add-leader')?.addEventListener('click', startAddLeader);
   document.getElementById('prop-cloud-arc').addEventListener('input', (e) => {
     state.cloudArc = Math.max(6, Math.min(36, Number(e.target.value) || 14));
     applyToSelected((m) => { m.cloudArc = state.cloudArc; });
@@ -137,11 +148,23 @@ export function syncPropsCardFromState() {
   if (!badge || !textEl) return;
 
   const sel = getSelectedMarkup();
+  const addLeaderBtn = document.getElementById('btn-add-leader');
   if (!sel) {
     lastSyncedId = null;
     badge.textContent = 'Defaults';
     if (document.activeElement !== textEl) textEl.value = '';
+    if (addLeaderBtn) {
+      addLeaderBtn.disabled = true;
+      addLeaderBtn.textContent = '+ Leader';
+    }
     return;
+  }
+
+  const canAddLeader = sel.type === 'arrow' || sel.type === 'callout';
+  if (addLeaderBtn) {
+    addLeaderBtn.disabled = !canAddLeader;
+    const count = Math.max(1, (sel.points?.length || 2) - 1);
+    addLeaderBtn.textContent = state.addingLeaderToId === sel.id ? 'Click Sheet...' : `+ Leader (${count})`;
   }
 
   badge.textContent = `Selected: ${sel.type.toUpperCase()}`;

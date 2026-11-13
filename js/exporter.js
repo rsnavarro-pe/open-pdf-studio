@@ -28,22 +28,28 @@ export async function exportAnnotatedPdf() {
       const fSize = m.fontSize || 11;
       const arrSize = m.arrowSize || 11;
       if (m.type === 'callout') {
-        const knee = { x: a.x + (b.x >= a.x ? 18 : -18), y: a.y };
-        page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: knee.x, y: toPdfY(knee.y) }, thickness: sw, color });
-        page.drawLine({ start: { x: knee.x, y: toPdfY(knee.y) }, end: { x: b.x, y: toPdfY(b.y) }, thickness: sw, color });
-        drawArrowPdf(page, knee, b, toPdfY, arrSize, sw, color);
+        for (let i = 1; i < m.points.length; i++) {
+          const tip = m.points[i];
+          const knee = { x: a.x + (tip.x >= a.x ? 18 : -18), y: a.y };
+          page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: knee.x, y: toPdfY(knee.y) }, thickness: sw, color });
+          page.drawLine({ start: { x: knee.x, y: toPdfY(knee.y) }, end: { x: tip.x, y: toPdfY(tip.y) }, thickness: sw, color });
+          drawArrowPdf(page, knee, tip, toPdfY, arrSize, sw, color);
+        }
         const lbl = m.text || 'CALLOUT';
         const bw = Math.max(42, lbl.length * (fSize * 0.56) + 12);
         const bh = fSize + 8;
         const bx = b.x >= a.x ? a.x - bw : a.x;
         page.drawRectangle({ x: bx, y: toPdfY(a.y) - bh / 2, width: bw, height: bh, color: hexToRgb(m.fillColor || '#ffffff', rgb), borderColor: color, borderWidth: Math.max(1, sw * 0.8) });
         page.drawText(lbl, { x: bx + 6, y: toPdfY(a.y) - fSize * 0.32, size: fSize, font, color });
+      } else if (m.type === 'arrow') {
+        for (let i = 1; i < m.points.length; i++) {
+          const tip = m.points[i];
+          page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: tip.x, y: toPdfY(tip.y) }, thickness: sw, color });
+          drawArrowPdf(page, a, tip, toPdfY, arrSize, sw, color);
+          if (m.arrowHead === 'both' && i === 1) drawArrowPdf(page, tip, a, toPdfY, arrSize, sw, color);
+        }
       } else {
         page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: b.x, y: toPdfY(b.y) }, thickness: sw, color });
-        if (m.type === 'arrow') {
-          drawArrowPdf(page, a, b, toPdfY, arrSize, sw, color);
-          if (m.arrowHead === 'both') drawArrowPdf(page, b, a, toPdfY, arrSize, sw, color);
-        }
         if (m.type === 'distance') {
           const label = formatLength(distPt(a, b), state.unitsPerPt, state.unit);
           page.drawText(label, { x: (a.x + b.x) / 2, y: toPdfY((a.y + b.y) / 2) + 6, size: 10, font, color });

@@ -150,6 +150,14 @@ export function hitTestMarkup(markup, pt, tol = 8) {
     return pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY;
   }
 
+  if (markup.type === 'arrow' || markup.type === 'callout') {
+    if (distPt(pts[0], pt) <= Math.max(tol, 18)) return true;
+    for (let i = 1; i < pts.length; i++) {
+      if (pointToSegmentDist(pt, pts[0], pts[i]) <= tol) return true;
+    }
+    return false;
+  }
+
   for (let i = 1; i < pts.length; i++) {
     if (pointToSegmentDist(pt, pts[i - 1], pts[i]) <= tol) return true;
   }

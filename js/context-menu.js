@@ -7,6 +7,7 @@ import { exportAnnotatedPdf } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { hitTestMarkup, screenToPdf } from './geometry.js';
 import { isDraftingMulti } from './overlay.js';
+import { startAddLeader } from './markup-props.js';
 
 export function initContextMenu() {
   const menu = document.getElementById('ctx-menu');
@@ -48,9 +49,13 @@ export function initContextMenu() {
 }
 
 function buildMenuItems(menu, scroller, closeMenu) {
+  const sel = state.selectedId ? state.markups.find((m) => m.id === state.selectedId) : null;
+  const canLeader = Boolean(sel && (sel.type === 'arrow' || sel.type === 'callout'));
   const items = [
     { label: 'Select (V)', action: () => setTool('select') },
     { label: 'Pan (H)', action: () => setTool('pan') },
+    { sep: true },
+    { label: '+ Add Leader Branch', disabled: !canLeader, action: startAddLeader },
     { sep: true },
     { label: 'Measure Distance (M)', action: () => setTool('distance') },
     { label: 'Measure Area (A)', action: () => setTool('area') },
