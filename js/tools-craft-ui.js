@@ -18,6 +18,7 @@ import {
   inspectPdfFormFields,
   fillOrFlattenPdfForm,
 } from './pdf-tools-extra.js';
+import { applyBatesAndWatermark } from './page-org.js';
 
 function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf) {
   document.getElementById(`${prefix}-current`).addEventListener('click', () => {
@@ -32,6 +33,14 @@ function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf)
 }
 
 export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
+  // Bates & Watermark
+  bindCurrentAndFile('tool-bates', (buf, name) => applyBatesAndWatermark(buf, name, {
+    watermark: document.getElementById('tool-wm-text').value,
+    batesPrefix: document.getElementById('tool-bates-prefix').value,
+    batesStart: document.getElementById('tool-bates-start').value,
+    useBates: Boolean(document.getElementById('tool-bates-prefix').value.trim() || !document.getElementById('tool-wm-text').value.trim()),
+  }, setStatus), setStatus, runSafe, requireOpenPdf);
+
   // N-Up Layout
   bindCurrentAndFile('tool-nup', (buf, name) => {
     const perSheet = Number(document.getElementById('tool-nup-count').value);

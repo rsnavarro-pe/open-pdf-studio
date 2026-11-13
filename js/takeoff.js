@@ -1,7 +1,7 @@
 /**
  * Quantity Takeoff & Bill of Quantities (BOQ) engine.
  */
-import { state, notify } from './state.js';
+import { state, notify, setTool } from './state.js';
 import { distPt, polylineLength, polygonArea, polygonPerimeter } from './geometry.js';
 import { triggerDownload } from './pdf-tools-org.js';
 
@@ -121,4 +121,57 @@ export function exportBoqCsv() {
 
   const base = (state.pdfName || 'takeoff').replace(/\.pdf$/i, '');
   triggerDownload(new Blob([lines.map((l) => l.join(',')).join('\n')], { type: 'text/csv;charset=utf-8;' }), `${base}_BOQ.csv`);
+}
+
+export function bindTakeoffEvents() {
+  initTakeoffState();
+  const sel = document.getElementById('takeoff-item-select');
+  const refreshSelect = () => {
+    sel.innerHTML = '<option value="">-- General Measurement --</option>';
+    for (const item of state.takeoffItems) {
+      const opt = document.createElement('option');
+      opt.value = item.id;
+      opt.textContent = `${item.name} (${item.tool})`;
+      sel.appendChild(opt);
+    }
+    sel.value = state.activeTakeoffId || '';
+  };
+  refreshSelect();
+
+  sel.addEventListener('change', () => {
+    state.activeTakeoffId = sel.value;
+    const item = state.takeoffItems.find((x) => x.id === sel.value);
+    if (item) {
+      state.strokeColor = item.color;
+      document.getElementById('prop-color').value = item.color;
+      setTool(item.tool);
+    }
+  });
+
+  document.getElementById('btn-export-boq').addEventListener('click', exportBoqCsv);
+
+  const modal = document.getElementById('takeoff-modal');
+  document.getElementById('btn-add-takeoff-item').addEventListener('click', () => {
+    document.getElementById('to-name').value = '';
+    modal.classList.remove('hidden');
+    document.getElementById('to-name').focus();
+  });
+  document.getElementById('to-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+  document.getElementById('to-save').addEventListener('click', () => {
+    const name = document.getElementById('to-name').value.trim();
+    if (!name) return;
+    const created = addTakeoffItem({
+      name,
+      trade: document.getElementById('to-trade').value.trim() || 'General',
+      tool: document.getElementById('to-tool').value,
+      depth: Number(document.getElementById('to-depth').value) || 0,
+      unitCost: Number(document.getElementById('to-cost').value) || 0,
+      color: document.getElementById('to-color').value || '#90472D',
+    });
+    refreshSelect();
+    document.getElementById('prop-color').value = created.color;
+    modal.classList.add('hidden');
+    setTool(created.tool);
+  });
+  return refreshSelect;
 }

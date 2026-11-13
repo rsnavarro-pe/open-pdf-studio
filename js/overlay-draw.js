@@ -147,3 +147,62 @@ function drawBadge(parent, x, y, text, color) {
   t.textContent = text;
   parent.appendChild(t);
 }
+
+export function createWheelZoomHandler(scrollerEl, state, renderOverlay, renderCurrentPage) {
+  let wheelRenderTimer = null;
+  let wheelRaf = null;
+  let pendingWheel = null;
+
+  return function onWheelZoom(e) {
+    if (!state.pdfBytes || e.shiftKey) return;
+    e.preventDefault();
+    let dy = e.deltaY;
+    if (e.deltaMode === 1) dy *= 32;
+    else if (e.deltaMode === 2) dy *= 400;
+    dy = Math.max(-90, Math.min(90, dy));
+
+    pendingWheel = { dy, clientX: e.clientX, clientY: e.clientY };
+    if (wheelRaf) return;
+
+    wheelRaf = requestAnimationFrame(() => {
+      wheelRaf = null;
+      if (!pendingWheel) return;
+      const { dy: d, clientX, clientY } = pendingWheel;
+      pendingWheel = null;
+
+      const stage = document.getElementById('page-stage');
+      const canvas = document.getElementById('pdf-canvas');
+      const prevZoom = state.zoom;
+      const nextZoom = Math.max(0.15, Math.min(6, +(prevZoom * Math.exp(-d * 0.0022)).toFixed(4)));
+      if (nextZoom === prevZoom) return;
+
+      const stageRect = stage.getBoundingClientRect();
+      const relX = clientX - stageRect.left;
+      const relY = clientY - stageRect.top;
+      const newW = (state.rotation % 180 === 90 ? state.pageHeightPt : state.pageWidthPt) * nextZoom;
+      const newH = (state.rotation % 180 === 90 ? state.pageWidthPt : state.pageHeightPt) * nextZoom;
+
+      state.zoom = nextZoom;
+      stage.style.width = `${newW}px`;
+      stage.style.height = `${newH}px`;
+      canvas.style.width = `${newW}px`;
+      canvas.style.height = `${newH}px`;
+      renderOverlay();
+
+      const ratio = nextZoom / prevZoom;
+      const newStageRect = stage.getBoundingClientRect();
+      scrollerEl.scrollLeft += (newStageRect.left + relX * ratio) - clientX;
+      scrollerEl.scrollTop += (newStageRect.top + relY * ratio) - clientY;
+      document.getElementById('lcd-zoom').textContent = `${Math.round(nextZoom * 100)}%`;
+
+      clearTimeout(wheelRenderTimer);
+      wheelRenderTimer = setTimeout(async () => {
+        const sl = scrollerEl.scrollLeft;
+        const st = scrollerEl.scrollTop;
+        await renderCurrentPage();
+        scrollerEl.scrollLeft = sl;
+        scrollerEl.scrollTop = st;
+      }, 220);
+    });
+  };
+}

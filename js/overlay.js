@@ -7,7 +7,7 @@ import { nextCountNumber } from './takeoff.js';
 import { findNearestSnap } from './osnap.js';
 import { renderCurrentPage } from './pdf-engine.js';
 import { screenToPdf, pdfToScreen, distPt, hitTestMarkup } from './geometry.js';
-import { createSvg, drawMarkupSvg } from './overlay-draw.js';
+import { createSvg, drawMarkupSvg, createWheelZoomHandler } from './overlay-draw.js';
 
 let svgEl = null;
 let scrollerEl = null;
@@ -16,9 +16,6 @@ let panStart = null;
 let dragMove = null; // { markup, lastPt, pushed }
 let onCalibrateCallback = null;
 let activeSnapPt = null;
-let wheelRenderTimer = null;
-let wheelRaf = null;
-let pendingWheel = null;
 
 export function initOverlay(onCalibrate) {
   svgEl = document.getElementById('overlay-svg');
@@ -30,7 +27,7 @@ export function initOverlay(onCalibrate) {
   svgEl.addEventListener('pointerup', onPointerUp);
   svgEl.addEventListener('dblclick', onDoubleClick);
   svgEl.addEventListener('contextmenu', onRightClickFinish);
-  scrollerEl.addEventListener('wheel', onWheelZoom, { passive: false });
+  scrollerEl.addEventListener('wheel', createWheelZoomHandler(scrollerEl, state, renderOverlay, renderCurrentPage), { passive: false });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (draft) { draft = null; renderOverlay(); }
@@ -244,62 +241,6 @@ function finishMultiDraft() {
   draft = null;
   if (pts.length < (type === 'perimeter' ? 2 : 3)) { renderOverlay(); return; }
   addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
-}
-
-function onWheelZoom(e) {
-  if (!state.pdfBytes || e.shiftKey) return;
-  e.preventDefault();
-
-  let dy = e.deltaY;
-  if (e.deltaMode === 1) dy *= 32;
-  else if (e.deltaMode === 2) dy *= 400;
-  dy = Math.max(-90, Math.min(90, dy));
-
-  pendingWheel = { dy, clientX: e.clientX, clientY: e.clientY };
-  if (wheelRaf) return;
-
-  wheelRaf = requestAnimationFrame(() => {
-    wheelRaf = null;
-    if (!pendingWheel) return;
-    const { dy: d, clientX, clientY } = pendingWheel;
-    pendingWheel = null;
-
-    const stage = document.getElementById('page-stage');
-    const canvas = document.getElementById('pdf-canvas');
-    const prevZoom = state.zoom;
-    const nextZoom = Math.max(0.15, Math.min(6, +(prevZoom * Math.exp(-d * 0.0022)).toFixed(4)));
-    if (nextZoom === prevZoom) return;
-
-    const rect = scrollerEl.getBoundingClientRect();
-    const stageRect = stage.getBoundingClientRect();
-    const relX = clientX - stageRect.left;
-    const relY = clientY - stageRect.top;
-
-    const newW = (state.rotation % 180 === 90 ? state.pageHeightPt : state.pageWidthPt) * nextZoom;
-    const newH = (state.rotation % 180 === 90 ? state.pageWidthPt : state.pageHeightPt) * nextZoom;
-
-    state.zoom = nextZoom;
-    stage.style.width = `${newW}px`;
-    stage.style.height = `${newH}px`;
-    canvas.style.width = `${newW}px`;
-    canvas.style.height = `${newH}px`;
-    renderOverlay();
-
-    const ratio = nextZoom / prevZoom;
-    const newStageRect = stage.getBoundingClientRect();
-    scrollerEl.scrollLeft += (newStageRect.left + relX * ratio) - clientX;
-    scrollerEl.scrollTop += (newStageRect.top + relY * ratio) - clientY;
-    document.getElementById('lcd-zoom').textContent = `${Math.round(nextZoom * 100)}%`;
-
-    clearTimeout(wheelRenderTimer);
-    wheelRenderTimer = setTimeout(async () => {
-      const sl = scrollerEl.scrollLeft;
-      const st = scrollerEl.scrollTop;
-      await renderCurrentPage();
-      scrollerEl.scrollLeft = sl;
-      scrollerEl.scrollTop = st;
-    }, 220);
-  });
 }
 
 export function renderOverlay() {
