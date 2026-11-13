@@ -194,6 +194,12 @@ function onPointerUp() {
   const span = distPt(p0, p1);
   const type = draft.type;
   draft = null;
+  if (type === 'sign') {
+    if (!state.signatureDataUrl) { renderOverlay(); return; }
+    const endPt = span < 8 ? { x: p0.x + 130, y: p0.y + 52 } : p1;
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'sign', points: [p0, endPt], text: 'Signature', sigDataUrl: state.signatureDataUrl, color: state.strokeColor, lineWidth: state.lineWidth });
+    return;
+  }
   if (span < 3) { renderOverlay(); return; }
   if (type === 'calibrate') { if (onCalibrateCallback) onCalibrateCallback(span); renderOverlay(); return; }
 

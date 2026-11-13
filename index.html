@@ -76,6 +76,8 @@
           <button class="tool-btn" data-tool="pen" title="Freehand Pen">Pen</button>
           <button class="tool-btn" data-tool="highlight" title="Highlighter">Highlight</button>
           <button class="tool-btn" data-tool="note" title="Sticky Note Comment (N)">Note</button>
+          <button class="tool-btn" data-tool="redact" title="Blackout Redaction Box">Redact</button>
+          <button id="btn-sign-tool" class="tool-btn" data-tool="sign" title="Electronic Signature or Image Stamp">Sign / Img</button>
           <button class="tool-btn" data-tool="text" title="Text Note (T)">Text</button>
           <button class="tool-btn" data-tool="stamp" title="Engineering Stamp">Stamp</button>
         </div>
@@ -381,9 +383,9 @@
         <div class="tool-card">
           <div class="tool-cat">CONVERT TO PDF</div>
           <h4>Images to PDF</h4>
-          <p>Convert JPG, PNG, or TIFF images into a multi-page PDF.</p>
-          <label class="btn btn-primary btn-sm" for="tool-img2pdf-input">Select JPG / PNG / TIFF</label>
-          <input id="tool-img2pdf-input" type="file" accept="image/jpeg,image/png,image/tiff,.tif,.tiff" multiple hidden />
+          <p>Convert JPG, PNG, WebP, SVG, or TIFF images into a multi-page PDF.</p>
+          <label class="btn btn-primary btn-sm" for="tool-img2pdf-input">Select Images</label>
+          <input id="tool-img2pdf-input" type="file" accept="image/jpeg,image/png,image/webp,image/svg+xml,image/tiff,.tif,.tiff,.webp,.svg" multiple hidden />
         </div>
 
         <!-- Convert From PDF -->
@@ -570,6 +572,50 @@
             <button id="tool-meta-strip" class="btn btn-secondary btn-sm">Strip All</button>
           </div>
         </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">EDIT &amp; TRIM</div>
+          <h4>Crop / Trim Margins</h4>
+          <p>Trim page margins (in points, 72 pt = 1 in) across current or all pages.</p>
+          <div class="tool-actions">
+            <input id="tool-crop-margin" type="number" min="4" max="200" value="24" style="width:72px" title="Margin to trim (pt)" />
+            <select id="tool-crop-scope" style="flex:1">
+              <option value="all">All Pages</option>
+              <option value="current">Current Page Only</option>
+            </select>
+          </div>
+          <div class="tool-actions">
+            <button id="tool-crop-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-crop-input">Pick File</label>
+            <input id="tool-crop-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">DATA EXTRACTION</div>
+          <h4>Extract Tables to CSV</h4>
+          <p>Detect aligned multi-column schedules and tables across pages and export to .csv.</p>
+          <div class="tool-actions">
+            <button id="tool-tables-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-tables-input">Pick File</label>
+            <input id="tool-tables-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">WORKFLOW PIPELINES</div>
+          <h4>One-Click PDF Pipelines</h4>
+          <p>Run chained multi-step PDFCraft workflows in a single click.</p>
+          <select id="tool-pipeline-select">
+            <option value="submittal">Submittal Ready (Watermark + Page # + Optimize)</option>
+            <option value="sanitize">Client Sanitize (Flatten + Strip Metadata)</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-pipeline-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-pipeline-input">Pick File</label>
+            <input id="tool-pipeline-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>
@@ -597,6 +643,35 @@
       <div class="modal-actions">
         <button id="to-cancel" class="btn btn-secondary">Cancel</button>
         <button id="to-save" class="btn btn-primary">Add Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Electronic Signature & Image Stamp Modal -->
+  <div id="sign-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3>Electronic Signature &amp; Image Stamp</h3>
+      <p class="modal-desc">Draw your signature, type a name, or upload a signature/logo image, then click on the sheet to place it.</p>
+      <canvas id="sign-pad" width="400" height="140" style="width:100%;height:140px;background:#fff;border:1px solid var(--border-subtle);border-radius:4px;touch-action:none;cursor:crosshair"></canvas>
+      <div class="prop-row">
+        <label for="sign-ink-color">Ink Color</label>
+        <input id="sign-ink-color" type="color" value="#183b3b" />
+        <button id="sign-clear" type="button" class="btn btn-secondary btn-sm">Clear Pad</button>
+      </div>
+      <div class="prop-row">
+        <input id="sign-type-input" type="text" placeholder="Or type name (e.g. R. Navarro, PE)" style="flex:1" />
+        <button id="sign-type-btn" type="button" class="btn btn-secondary btn-sm">Render Text</button>
+      </div>
+      <div class="prop-row">
+        <label class="btn btn-secondary btn-sm" for="sign-upload-input">Upload Signature / Logo</label>
+        <input id="sign-upload-input" type="file" accept="image/*" hidden />
+        <label style="font-size:11px;display:flex;align-items:center;gap:4px">
+          <input id="sign-remove-bg" type="checkbox" checked /> Remove white bg
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button id="sign-cancel" type="button" class="btn btn-secondary">Cancel</button>
+        <button id="sign-apply" type="button" class="btn btn-primary">Use &amp; Place on Sheet</button>
       </div>
     </div>
   </div>

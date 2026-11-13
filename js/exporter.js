@@ -65,15 +65,26 @@ export async function exportAnnotatedPdf() {
           opacity: isHi ? 0.35 : 1,
         });
       }
-    } else if (m.type === 'rect' && m.points.length >= 2) {
+    } else if ((m.type === 'rect' || m.type === 'redact') && m.points.length >= 2) {
       const [a, b] = m.points;
+      const isRed = m.type === 'redact';
       page.drawRectangle({
         x: Math.min(a.x, b.x),
         y: toPdfY(Math.max(a.y, b.y)),
         width: Math.abs(b.x - a.x),
         height: Math.abs(b.y - a.y),
-        borderColor: color,
-        borderWidth: sw,
+        color: isRed ? rgb(0, 0, 0) : undefined,
+        borderColor: isRed ? rgb(0, 0, 0) : color,
+        borderWidth: isRed ? 0 : sw,
+      });
+    } else if (m.type === 'sign' && m.points.length >= 2 && m.sigDataUrl) {
+      const [a, b] = m.points;
+      const pngImg = await doc.embedPng(m.sigDataUrl);
+      page.drawImage(pngImg, {
+        x: Math.min(a.x, b.x),
+        y: toPdfY(Math.max(a.y, b.y)),
+        width: Math.max(10, Math.abs(b.x - a.x)),
+        height: Math.max(10, Math.abs(b.y - a.y)),
       });
     } else if (m.type === 'cloud' && m.points.length >= 2) {
       const svgPath = buildRevisionCloudPath(m.points[0], m.points[1], 14);

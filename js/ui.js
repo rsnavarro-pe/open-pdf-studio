@@ -26,6 +26,8 @@ const TOOL_HINTS = {
   pen: 'Click and drag to draw freehand.',
   highlight: 'Click and drag to highlight (choose colors in Highlight / Note palette).',
   note: 'Click anywhere on the sheet to place a sticky note comment (double-click to edit).',
+  redact: 'Click and drag a box to blackout/redact confidential content on export.',
+  sign: 'Click (or click-drag to size) on the sheet to place your signature or image.',
   text: 'Click anywhere on the sheet to place a text note.',
   stamp: 'Click anywhere on the sheet to place the selected stamp.',
 };

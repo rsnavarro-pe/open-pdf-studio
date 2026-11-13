@@ -179,6 +179,9 @@ export async function imagesToPdf(files, onStatus) {
     } else if (lower.endsWith('.tif') || lower.endsWith('.tiff')) {
       const pngBytes = await tiffToPngBytes(buf);
       embedded = await doc.embedPng(pngBytes);
+    } else if (lower.endsWith('.webp') || lower.endsWith('.svg')) {
+      const pngBytes = await rasterFileToPngBytes(file);
+      embedded = await doc.embedPng(pngBytes);
     } else {
       continue;
     }
@@ -205,6 +208,26 @@ async function tiffToPngBytes(arrayBuffer) {
   ctx.putImageData(imgData, 0, 0);
   const blob = await new Promise((res) => canvas.toBlob(res, 'image/png'));
   return await blob.arrayBuffer();
+}
+
+async function rasterFileToPngBytes(file) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await new Promise((res, rej) => {
+      const el = new Image();
+      el.onload = () => res(el);
+      el.onerror = rej;
+      el.src = url;
+    });
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth || img.width || 800;
+    c.height = img.naturalHeight || img.height || 600;
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const blob = await new Promise((res) => c.toBlob(res, 'image/png'));
+    return await blob.arrayBuffer();
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }
 
 function parsePageRanges(text, maxPages) {

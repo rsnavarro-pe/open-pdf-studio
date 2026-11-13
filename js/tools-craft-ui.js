@@ -10,6 +10,11 @@ import {
   readPdfMetadata,
   editMetadataPdf,
 } from './pdf-tools-craft.js';
+import {
+  cropPdfPages,
+  extractTablesToCsv,
+  runWorkflowPipeline,
+} from './pdf-tools-extra.js';
 
 function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf) {
   document.getElementById(`${prefix}-current`).addEventListener('click', () => {
@@ -74,4 +79,20 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
   };
   document.getElementById('tool-meta-save').addEventListener('click', () => runMeta('update'));
   document.getElementById('tool-meta-strip').addEventListener('click', () => runMeta('strip'));
+
+  // Crop / Trim Margins
+  bindCurrentAndFile('tool-crop', (buf, name) => {
+    const marginPt = Number(document.getElementById('tool-crop-margin').value) || 18;
+    const scope = document.getElementById('tool-crop-scope').value;
+    return cropPdfPages(buf, name, marginPt, scope, state.currentPage, setStatus);
+  }, setStatus, runSafe, requireOpenPdf);
+
+  // Extract Tables to CSV
+  bindCurrentAndFile('tool-tables', (buf, name) => extractTablesToCsv(buf, name, setStatus), setStatus, runSafe, requireOpenPdf);
+
+  // One-Click Workflow Pipelines
+  bindCurrentAndFile('tool-pipeline', (buf, name) => {
+    const pipe = document.getElementById('tool-pipeline-select').value;
+    return runWorkflowPipeline(buf, name, pipe, setStatus);
+  }, setStatus, runSafe, requireOpenPdf);
 }

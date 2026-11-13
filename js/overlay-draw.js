@@ -66,13 +66,38 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
       'stroke-opacity': isHi ? '0.4' : '1',
       'stroke-linecap': 'round', 'stroke-linejoin': 'round',
     }));
-  } else if (m.type === 'rect') {
+  } else if (m.type === 'rect' || m.type === 'redact') {
     const [a, b] = pts;
+    const isRed = m.type === 'redact';
+    const rx = Math.min(a.x, b.x);
+    const ry = Math.min(a.y, b.y);
+    const rw = Math.abs(b.x - a.x);
+    const rh = Math.abs(b.y - a.y);
     g.appendChild(createSvg('rect', {
-      x: Math.min(a.x, b.x), y: Math.min(a.y, b.y),
-      width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y),
-      fill: 'none', stroke, 'stroke-width': sw,
+      x: rx, y: ry, width: rw, height: rh,
+      fill: isRed ? '#111111' : 'none',
+      'fill-opacity': isRed ? '0.88' : '1',
+      stroke: isRed ? (isSelected ? '#0ea5e9' : '#c0392b') : stroke,
+      'stroke-width': sw,
     }));
+    if (isRed && rw > 44 && rh > 16) {
+      const rt = createSvg('text', { x: rx + rw / 2, y: ry + rh / 2 + 4, 'text-anchor': 'middle', fill: '#fca5a5', 'font-size': 10, 'font-weight': '700' });
+      rt.textContent = 'REDACTED';
+      g.appendChild(rt);
+    }
+  } else if (m.type === 'sign') {
+    const [a, b] = pts;
+    const rx = Math.min(a.x, b.x);
+    const ry = Math.min(a.y, b.y);
+    const rw = Math.max(24, Math.abs(b.x - a.x));
+    const rh = Math.max(16, Math.abs(b.y - a.y));
+    const href = m.sigDataUrl || state.signatureDataUrl;
+    if (href) {
+      g.appendChild(createSvg('image', { href, x: rx, y: ry, width: rw, height: rh, preserveAspectRatio: 'xMidYMid meet' }));
+    }
+    if (isSelected || isDraft) {
+      g.appendChild(createSvg('rect', { x: rx, y: ry, width: rw, height: rh, fill: 'none', stroke: '#0ea5e9', 'stroke-dasharray': '4,3', 'stroke-width': 1.3 }));
+    }
   } else if (m.type === 'cloud') {
     const d = buildRevisionCloudPath(pts[0], pts[1], 14 * state.zoom);
     if (d) g.appendChild(createSvg('path', { d, fill: stroke, 'fill-opacity': '0.07', stroke, 'stroke-width': sw }));

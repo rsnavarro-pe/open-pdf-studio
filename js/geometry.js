@@ -142,7 +142,7 @@ export function hitTestMarkup(markup, pt, tol = 8) {
     return distPt(pts[0], pt) <= Math.max(tol, 24);
   }
 
-  if (['rect', 'cloud'].includes(markup.type) && pts.length >= 2) {
+  if (['rect', 'cloud', 'redact', 'sign'].includes(markup.type) && pts.length >= 2) {
     const minX = Math.min(pts[0].x, pts[1].x) - tol;
     const maxX = Math.max(pts[0].x, pts[1].x) + tol;
     const minY = Math.min(pts[0].y, pts[1].y) - tol;

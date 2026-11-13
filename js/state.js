@@ -21,6 +21,7 @@ export const state = {
   highlightColor: '#facc15',
   lineWidth: 2,
   stampType: 'RSN APPROVED',
+  signatureDataUrl: null,
 
   // Scale calibration: unitsPerPt (displayUnit per PDF point at zoom=1)
   unit: 'm',

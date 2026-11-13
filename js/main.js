@@ -18,6 +18,7 @@ import { initSearch } from './search.js';
 import { initTakeoffState, addTakeoffItem, exportBoqCsv } from './takeoff.js';
 import { scheduleAutoSave, restoreLastSession, exportProjectJson, importProjectJson } from './storage.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
+import { initSignatureModal } from './signature.js';
 import { renderUI } from './ui.js';
 
 let pendingCalibratePtSpan = 0;
@@ -35,6 +36,7 @@ async function init() {
   bindCalibrationModal();
   bindKeyboardShortcuts();
   initPdfTools();
+  initSignatureModal();
   initContextMenu();
   initSearch();
   refreshTakeoffSelectFn = bindTakeoffEvents();
@@ -103,6 +105,7 @@ function bindFileEvents() {
 
 function bindToolEvents() {
   document.querySelectorAll('.tool-btn').forEach((btn) => {
+    if (btn.id === 'btn-sign-tool') return;
     btn.addEventListener('click', () => setTool(btn.dataset.tool));
   });
 
