@@ -33,6 +33,9 @@
           <button id="btn-export-pdf" class="btn btn-accent" disabled>Export PDF</button>
           <button id="btn-export-dxf" class="btn btn-secondary" disabled title="Quick export current page to AutoCAD DXF">Export DXF</button>
           <button id="btn-export-csv" class="btn btn-secondary" disabled>Export CSV</button>
+          <button id="btn-save-project" class="btn btn-secondary" disabled title="Save markups, scale & BOQ (.rsn.json)">Save Proj</button>
+          <label class="btn btn-secondary" for="project-file-input" title="Load .rsn.json project onto open PDF">Load Proj</label>
+          <input id="project-file-input" type="file" accept=".json,.rsn.json,application/json" hidden />
         </div>
         <div class="lcd-cluster">
           <div class="lcd-readout" title="Active Scale">

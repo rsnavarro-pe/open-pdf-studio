@@ -16,13 +16,16 @@ import { initPdfTools } from './tools-ui.js';
 import { initContextMenu } from './context-menu.js';
 import { initSearch } from './search.js';
 import { initTakeoffState, addTakeoffItem, exportBoqCsv } from './takeoff.js';
+import { scheduleAutoSave, restoreLastSession, exportProjectJson, importProjectJson } from './storage.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
 
 let pendingCalibratePtSpan = 0;
+let refreshTakeoffSelectFn = null;
 
-function init() {
+async function init() {
   subscribe(renderUI);
+  subscribe(scheduleAutoSave);
   initOverlay(openCalibrateModal);
   bindFileEvents();
   bindToolEvents();
@@ -34,12 +37,13 @@ function init() {
   initPdfTools();
   initContextMenu();
   initSearch();
-  bindTakeoffEvents();
+  refreshTakeoffSelectFn = bindTakeoffEvents();
   document.getElementById('btn-osnap').addEventListener('click', () => {
     state.osnap = !state.osnap;
     notify();
   });
   notify();
+  await restoreLastSession(loadPdfA, renderCurrentPage, refreshTakeoffSelectFn);
 }
 
 function bindFileEvents() {
@@ -73,6 +77,17 @@ function bindFileEvents() {
     }
   });
   document.getElementById('btn-export-csv').addEventListener('click', exportTakeoffCsv);
+  document.getElementById('btn-save-project').addEventListener('click', exportProjectJson);
+  document.getElementById('project-file-input').addEventListener('change', async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await importProjectJson(file, refreshTakeoffSelectFn);
+    } catch (err) {
+      document.getElementById('tool-hint').textContent = `Project load error: ${err?.message || 'Invalid file'}`;
+    }
+    e.target.value = '';
+  });
 
   // Drag & Drop
   const scroller = document.getElementById('canvas-scroller');
@@ -262,6 +277,7 @@ function bindTakeoffEvents() {
     modal.classList.add('hidden');
     setTool(created.tool);
   });
+  return refreshSelect;
 }
 
 function bindKeyboardShortcuts() {
