@@ -27,6 +27,7 @@ export async function loadPdfA(arrayBuffer, fileName) {
   clearDocumentState(new Uint8Array(arrayBuffer), fileName, pdfDocA.numPages);
   await renderCurrentPage();
   await renderAllThumbnails();
+  await renderBookmarksOutline();
 }
 
 export async function reloadPdfPreserving(arrayBuffer, fileName, meta) {
@@ -157,5 +158,51 @@ export async function renderAllThumbnails() {
       await renderCurrentPage();
     });
     container.appendChild(item);
+  }
+}
+
+export async function renderBookmarksOutline() {
+  const listEl = document.getElementById('bookmarks-list');
+  if (!listEl || !pdfDocA) return;
+  listEl.innerHTML = '';
+
+  const entries = [];
+  const outline = await pdfDocA.getOutline().catch(() => null);
+
+  async function walk(items, depth = 0) {
+    for (const it of items || []) {
+      let pageNum = 1;
+      try {
+        const dest = typeof it.dest === 'string' ? await pdfDocA.getDestination(it.dest) : it.dest;
+        if (Array.isArray(dest) && dest[0]) {
+          pageNum = (await pdfDocA.getPageIndex(dest[0])) + 1;
+        }
+      } catch (_) { /* fallback to page 1 */ }
+      entries.push({ title: it.title || `Section`, page: pageNum, depth });
+      if (it.items?.length) await walk(it.items, depth + 1);
+    }
+  }
+
+  if (outline?.length) {
+    await walk(outline, 0);
+  } else {
+    for (let p = 1; p <= pdfDocA.numPages; p++) {
+      const page = await pdfDocA.getPage(p);
+      const tc = await page.getTextContent().catch(() => ({ items: [] }));
+      const firstLine = tc.items.map((x) => (x.str || '').trim()).find((s) => s.length >= 3) || `Sheet ${p}`;
+      entries.push({ title: firstLine.slice(0, 42), page: p, depth: 0 });
+    }
+  }
+
+  for (const e of entries) {
+    const row = document.createElement('div');
+    row.className = 'markup-item';
+    row.style.paddingLeft = `${8 + e.depth * 12}px`;
+    row.innerHTML = `<div class="markup-item-head"><span>${e.title}</span><span class="mono">P.${e.page}</span></div>`;
+    row.addEventListener('click', async () => {
+      state.currentPage = e.page;
+      await renderCurrentPage();
+    });
+    listEl.appendChild(row);
   }
 }
