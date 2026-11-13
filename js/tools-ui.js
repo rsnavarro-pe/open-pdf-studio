@@ -7,6 +7,8 @@ import { pdfToImages, pdfToPptx, pdfToDocx } from './pdf-tools-export.js';
 import { runOcrPdf } from './pdf-tools-ocr.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { dxfTextToPdfBytes } from './dxf-to-pdf.js';
+import { dwgBytesToPdfBytes } from './dwg-to-pdf.js';
+import { loadPdfA } from './pdf-engine.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -142,17 +144,24 @@ export function initPdfTools() {
     e.target.value = '';
   });
 
-  // DXF -> PDF
+  // DWG / DXF -> PDF
   document.getElementById('tool-dxf2pdf-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
     await runSafe(setStatus, async () => {
-      setStatus(`Converting ${f.name} to PDF...`);
-      const dxfText = await f.text();
-      const bytes = await dxfTextToPdfBytes(dxfText, window.PDFLib);
-      const outName = f.name.replace(/\.dxf$/i, '') + '.pdf';
+      const isDwg = f.name.toLowerCase().endsWith('.dwg');
+      let bytes;
+      if (isDwg) {
+        const res = await dwgBytesToPdfBytes(await f.arrayBuffer(), window.PDFLib, setStatus);
+        bytes = res.pdfBytes;
+      } else {
+        setStatus(`Converting ${f.name} to PDF...`);
+        bytes = await dxfTextToPdfBytes(await f.text(), window.PDFLib);
+      }
+      const outName = f.name.replace(/\.(dwg|dxf)$/i, '') + '.pdf';
       triggerDownload(new Blob([bytes], { type: 'application/pdf' }), outName);
-      setStatus(`Converted ${f.name} to ${outName}.`);
+      await loadPdfA(bytes.buffer, outName);
+      setStatus(`Converted ${f.name} to ${outName} and opened in studio.`);
     });
     e.target.value = '';
   });
