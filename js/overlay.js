@@ -16,6 +16,8 @@ let panStart = null;
 let dragMove = null; // { markup, lastPt, pushed }
 let onCalibrateCallback = null;
 let activeSnapPt = null;
+let wheelRenderTimer = null;
+let wheelBaseZoom = null;
 
 export function initOverlay(onCalibrate) {
   svgEl = document.getElementById('overlay-svg');
@@ -227,19 +229,39 @@ function finishMultiDraft() {
   addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
 }
 
-async function onWheelZoom(e) {
-  if (!state.pdfBytes || !(e.ctrlKey || e.metaKey)) return;
+function onWheelZoom(e) {
+  if (!state.pdfBytes || e.shiftKey) return;
   e.preventDefault();
+
+  const stage = document.getElementById('page-stage');
+  if (wheelBaseZoom === null) wheelBaseZoom = state.zoom;
+
   const prevZoom = state.zoom;
-  const nextZoom = Math.max(0.25, Math.min(4, +(prevZoom + (e.deltaY < 0 ? 0.15 : -0.15)).toFixed(2)));
+  const factor = Math.exp(-e.deltaY * 0.0018);
+  const nextZoom = Math.max(0.15, Math.min(6, +(prevZoom * factor).toFixed(3)));
   if (nextZoom === prevZoom) return;
+
   const rect = scrollerEl.getBoundingClientRect();
-  const cx = e.clientX - rect.left + scrollerEl.scrollLeft;
-  const cy = e.clientY - rect.top + scrollerEl.scrollTop;
+  const pointerX = e.clientX - rect.left;
+  const pointerY = e.clientY - rect.top;
+  const contentX = pointerX + scrollerEl.scrollLeft;
+  const contentY = pointerY + scrollerEl.scrollTop;
+
   state.zoom = nextZoom;
-  await renderCurrentPage();
-  scrollerEl.scrollLeft = cx * (nextZoom / prevZoom) - (e.clientX - rect.left);
-  scrollerEl.scrollTop = cy * (nextZoom / prevZoom) - (e.clientY - rect.top);
+  const previewScale = nextZoom / wheelBaseZoom;
+  stage.style.transformOrigin = '0 0';
+  stage.style.transform = `scale(${previewScale})`;
+
+  scrollerEl.scrollLeft = contentX * (nextZoom / prevZoom) - pointerX;
+  scrollerEl.scrollTop = contentY * (nextZoom / prevZoom) - pointerY;
+  document.getElementById('lcd-zoom').textContent = `${Math.round(nextZoom * 100)}%`;
+
+  clearTimeout(wheelRenderTimer);
+  wheelRenderTimer = setTimeout(async () => {
+    wheelBaseZoom = null;
+    stage.style.transform = '';
+    await renderCurrentPage();
+  }, 120);
 }
 
 export function renderOverlay() {
