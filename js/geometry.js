@@ -153,7 +153,7 @@ export function hitTestMarkup(markup, pt, tol = 8) {
   for (let i = 1; i < pts.length; i++) {
     if (pointToSegmentDist(pt, pts[i - 1], pts[i]) <= tol) return true;
   }
-  if (markup.type === 'area' && pts.length >= 3) {
+  if ((markup.type === 'area' || markup.type === 'cutout') && pts.length >= 3) {
     if (pointInPolygon(pt, pts)) return true;
   }
   return false;

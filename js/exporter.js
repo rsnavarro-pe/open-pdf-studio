@@ -47,12 +47,24 @@ export async function exportAnnotatedPdf() {
       page.drawText(formatLength(polylineLength(m.points), state.unitsPerPt, state.unit), {
         x: last.x, y: toPdfY(last.y) + 6, size: 10, font, color,
       });
-    } else if (m.type === 'area' && m.points.length >= 3) {
+    } else if ((m.type === 'area' || m.type === 'cutout') && m.points.length >= 3) {
       drawPoly(page, m.points, toPdfY, sw, color, true);
       const cx = m.points.reduce((s, p) => s + p.x, 0) / m.points.length;
       const cy = m.points.reduce((s, p) => s + p.y, 0) / m.points.length;
-      const label = `${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`;
-      page.drawText(label, { x: cx - 20, y: toPdfY(cy), size: 10, font, color });
+      const prefix = m.type === 'cutout' ? '-' : '';
+      page.drawText(`${prefix}${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`, { x: cx - 20, y: toPdfY(cy), size: 10, font, color });
+    } else if ((m.type === 'pen' || m.type === 'highlight') && m.points.length >= 2) {
+      const isHi = m.type === 'highlight';
+      const hiColor = isHi && (m.color || '#c0392b') === '#c0392b' ? rgb(0.98, 0.8, 0.08) : color;
+      for (let i = 1; i < m.points.length; i++) {
+        page.drawLine({
+          start: { x: m.points[i - 1].x, y: toPdfY(m.points[i - 1].y) },
+          end: { x: m.points[i].x, y: toPdfY(m.points[i].y) },
+          thickness: isHi ? 14 : sw,
+          color: hiColor,
+          opacity: isHi ? 0.35 : 1,
+        });
+      }
     } else if (m.type === 'rect' && m.points.length >= 2) {
       const [a, b] = m.points;
       page.drawRectangle({

@@ -1,23 +1,19 @@
 /**
  * Interactive SVG annotation & measurement overlay controller.
  */
-import { state, addMarkup, setTool, notify } from './state.js';
+import { state, addMarkup, pushHistory, setTool, notify } from './state.js';
 import { buildStampPayload } from './stamps.js';
-import { drawStampSvg } from './stamp-renderer.js';
 import { nextCountNumber } from './takeoff.js';
 import { findNearestSnap } from './osnap.js';
 import { renderCurrentPage } from './pdf-engine.js';
-import {
-  screenToPdf, pdfToScreen, distPt, polylineLength,
-  polygonPerimeter, polygonArea, formatLength, formatArea,
-  buildRevisionCloudPath, hitTestMarkup,
-} from './geometry.js';
+import { screenToPdf, pdfToScreen, distPt, hitTestMarkup } from './geometry.js';
+import { createSvg, drawMarkupSvg } from './overlay-draw.js';
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 let svgEl = null;
 let scrollerEl = null;
-let draft = null; // { type, points, isDragging }
+let draft = null;
 let panStart = null;
+let dragMove = null; // { markup, lastPt, pushed }
 let onCalibrateCallback = null;
 let activeSnapPt = null;
 
@@ -34,12 +30,8 @@ export function initOverlay(onCalibrate) {
   scrollerEl.addEventListener('wheel', onWheelZoom, { passive: false });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (draft) {
-        draft = null;
-        renderOverlay();
-      } else if (state.activeTool !== 'select') {
-        setTool('select');
-      }
+      if (draft) { draft = null; renderOverlay(); }
+      else if (state.activeTool !== 'select') setTool('select');
     }
   });
 }
@@ -50,10 +42,8 @@ export function isDraftingMulti() {
 
 function getPdfPointFromEvent(e, applySnap = true) {
   const rect = svgEl.getBoundingClientRect();
-  const px = e.clientX - rect.left;
-  const py = e.clientY - rect.top;
-  const raw = screenToPdf(px, py, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
-  if (applySnap && state.osnap && !['select', 'pan'].includes(state.activeTool)) {
+  const raw = screenToPdf(e.clientX - rect.left, e.clientY - rect.top, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
+  if (applySnap && state.osnap && !['select', 'pan', 'pen', 'highlight'].includes(state.activeTool)) {
     const res = findNearestSnap(raw, state.snapPoints, 10 / state.zoom);
     activeSnapPt = res.snapped ? res.pt : null;
     return res.pt;
@@ -68,8 +58,6 @@ function toScreen(pt) {
 
 function onPointerDown(e) {
   if (!state.pdfBytes) return;
-
-  // Middle-click pan (e.button === 1) or Pan tool left-click
   if (e.button === 1 || (e.button === 0 && state.activeTool === 'pan')) {
     e.preventDefault();
     panStart = { x: e.clientX, y: e.clientY, left: scrollerEl.scrollLeft, top: scrollerEl.scrollTop };
@@ -77,14 +65,18 @@ function onPointerDown(e) {
     return;
   }
   if (e.button !== 0) return;
-  const tool = state.activeTool;
 
+  const tool = state.activeTool;
   const pt = getPdfPointFromEvent(e);
 
   if (tool === 'select') {
     const pageMarkups = state.markups.filter((m) => m.page === state.currentPage);
     const hit = [...pageMarkups].reverse().find((m) => hitTestMarkup(m, pt, 10 / state.zoom));
     state.selectedId = hit ? hit.id : null;
+    if (hit) {
+      dragMove = { markup: hit, lastPt: pt, pushed: false };
+      svgEl.setPointerCapture(e.pointerId);
+    }
     notify();
     return;
   }
@@ -92,62 +84,36 @@ function onPointerDown(e) {
   if (tool === 'text') {
     const text = window.prompt('Enter annotation text:', 'NOTE: Verify field dimension');
     if (!text) return;
-    addMarkup({
-      id: crypto.randomUUID(),
-      page: state.currentPage,
-      type: 'text',
-      points: [pt],
-      text,
-      color: state.strokeColor,
-      lineWidth: state.lineWidth,
-    });
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'text', points: [pt], text, color: state.strokeColor, lineWidth: state.lineWidth });
     return;
   }
 
   if (tool === 'count') {
     const num = nextCountNumber(state.activeTakeoffId);
-    addMarkup({
-      id: crypto.randomUUID(),
-      page: state.currentPage,
-      type: 'count',
-      points: [pt],
-      countNum: num,
-      text: `#${num}`,
-      takeoffItemId: state.activeTakeoffId || '',
-      color: state.strokeColor,
-      lineWidth: state.lineWidth,
-    });
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'count', points: [pt], countNum: num, text: `#${num}`, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
     return;
   }
 
   if (tool === 'stamp') {
     const stampData = buildStampPayload(state.stampType);
-    addMarkup({
-      id: crypto.randomUUID(),
-      page: state.currentPage,
-      type: 'stamp',
-      points: [pt],
-      text: stampData.label,
-      stampData,
-      color: stampData.color || state.strokeColor,
-      lineWidth: state.lineWidth,
-    });
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'stamp', points: [pt], text: stampData.label, stampData, color: stampData.color || state.strokeColor, lineWidth: state.lineWidth });
     return;
   }
 
-  // Multi-point tools: perimeter, area
-  if (tool === 'perimeter' || tool === 'area') {
-    if (!draft) {
-      draft = { type: tool, points: [pt, pt], multi: true };
-    } else {
-      draft.points[draft.points.length - 1] = pt;
-      draft.points.push(pt);
-    }
+  if (['perimeter', 'area', 'cutout'].includes(tool)) {
+    if (!draft) draft = { type: tool, points: [pt, pt], multi: true };
+    else { draft.points[draft.points.length - 1] = pt; draft.points.push(pt); }
     renderOverlay();
     return;
   }
 
-  // Two-point drag/click tools: calibrate, distance, cloud, callout, arrow, rect
+  if (tool === 'pen' || tool === 'highlight') {
+    draft = { type: tool, points: [pt], freehand: true };
+    svgEl.setPointerCapture(e.pointerId);
+    renderOverlay();
+    return;
+  }
+
   draft = { type: tool, points: [pt, pt], isDragging: true };
   svgEl.setPointerCapture(e.pointerId);
   renderOverlay();
@@ -155,7 +121,6 @@ function onPointerDown(e) {
 
 function onPointerMove(e) {
   if (!state.pdfBytes) return;
-
   if (panStart) {
     scrollerEl.scrollLeft = panStart.left - (e.clientX - panStart.x);
     scrollerEl.scrollTop = panStart.top - (e.clientY - panStart.y);
@@ -165,82 +130,84 @@ function onPointerMove(e) {
   const pt = getPdfPointFromEvent(e);
   const coordsEl = document.getElementById('lcd-coords');
   if (coordsEl) {
-    const factor = state.unitsPerPt || 1;
-    const suffix = state.unitsPerPt ? state.unit : 'pt';
-    coordsEl.textContent = `${(pt.x * factor).toFixed(1)}, ${(pt.y * factor).toFixed(1)} ${suffix}`;
+    const f = state.unitsPerPt || 1;
+    coordsEl.textContent = `${(pt.x * f).toFixed(1)}, ${(pt.y * f).toFixed(1)} ${state.unitsPerPt ? state.unit : 'pt'}`;
+  }
+
+  if (dragMove) {
+    const dx = pt.x - dragMove.lastPt.x;
+    const dy = pt.y - dragMove.lastPt.y;
+    if (Math.hypot(dx, dy) > 0.5) {
+      if (!dragMove.pushed) { pushHistory(); dragMove.pushed = true; }
+      dragMove.markup.points = dragMove.markup.points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+      dragMove.lastPt = pt;
+      renderOverlay();
+    }
+    return;
   }
 
   if (!draft) {
     if (state.osnap) renderOverlay();
     return;
   }
-  draft.points[draft.points.length - 1] = pt;
+  if (draft.freehand) {
+    const last = draft.points[draft.points.length - 1];
+    if (distPt(last, pt) >= 2 / state.zoom) draft.points.push(pt);
+  } else {
+    draft.points[draft.points.length - 1] = pt;
+  }
   renderOverlay();
 }
 
-async function onWheelZoom(e) {
-  if (!state.pdfBytes || !(e.ctrlKey || e.metaKey)) return;
-  e.preventDefault();
-  const prevZoom = state.zoom;
-  const step = e.deltaY < 0 ? 0.15 : -0.15;
-  const nextZoom = Math.max(0.25, Math.min(4, +(prevZoom + step).toFixed(2)));
-  if (nextZoom === prevZoom) return;
-
-  const rect = scrollerEl.getBoundingClientRect();
-  const cx = e.clientX - rect.left + scrollerEl.scrollLeft;
-  const cy = e.clientY - rect.top + scrollerEl.scrollTop;
-  const ratio = nextZoom / prevZoom;
-
-  state.zoom = nextZoom;
-  await renderCurrentPage();
-  scrollerEl.scrollLeft = cx * ratio - (e.clientX - rect.left);
-  scrollerEl.scrollTop = cy * ratio - (e.clientY - rect.top);
-}
-
-function onPointerUp(e) {
-  if (panStart) {
-    panStart = null;
+function onPointerUp() {
+  if (panStart) { panStart = null; return; }
+  if (dragMove) {
+    const changed = dragMove.pushed;
+    dragMove = null;
+    if (changed) notify();
     return;
   }
   if (!draft || draft.multi) return;
 
-  const p0 = draft.points[0];
-  const p1 = draft.points[1];
+  if (draft.freehand) {
+    const pts = draft.points;
+    const type = draft.type;
+    draft = null;
+    if (pts.length >= 2) {
+      addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, color: state.strokeColor, lineWidth: state.lineWidth });
+    } else renderOverlay();
+    return;
+  }
+
+  const [p0, p1] = draft.points;
   const span = distPt(p0, p1);
   const type = draft.type;
   draft = null;
-
-  if (span < 3) {
-    renderOverlay();
-    return;
-  }
-
-  if (type === 'calibrate') {
-    if (onCalibrateCallback) onCalibrateCallback(span);
-    renderOverlay();
-    return;
-  }
+  if (span < 3) { renderOverlay(); return; }
+  if (type === 'calibrate') { if (onCalibrateCallback) onCalibrateCallback(span); renderOverlay(); return; }
 
   let text = '';
   if (type === 'callout') {
     text = window.prompt('Callout label:', 'DETAIL REF') || '';
     if (!text) { renderOverlay(); return; }
   }
-
-  addMarkup({
-    id: crypto.randomUUID(),
-    page: state.currentPage,
-    type,
-    points: [p0, p1],
-    text,
-    takeoffItemId: state.activeTakeoffId || '',
-    color: state.strokeColor,
-    lineWidth: state.lineWidth,
-  });
+  addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: [p0, p1], text, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
 }
 
-function onDoubleClick() {
-  finishMultiDraft();
+function onDoubleClick(e) {
+  if (draft && draft.multi) { finishMultiDraft(); return; }
+  if (state.activeTool === 'select' && state.selectedId) {
+    const m = state.markups.find((x) => x.id === state.selectedId);
+    if (m && (m.type === 'text' || m.type === 'callout')) {
+      e.preventDefault();
+      const updated = window.prompt('Edit label:', m.text || '');
+      if (updated !== null && updated.trim()) {
+        pushHistory();
+        m.text = updated.trim();
+        notify();
+      }
+    }
+  }
 }
 
 function onRightClickFinish(e) {
@@ -256,141 +223,42 @@ function finishMultiDraft() {
   const pts = draft.points.slice(0, -1);
   const type = draft.type;
   draft = null;
-  if (pts.length < (type === 'area' ? 3 : 2)) {
-    renderOverlay();
-    return;
-  }
-  addMarkup({
-    id: crypto.randomUUID(),
-    page: state.currentPage,
-    type,
-    points: pts,
-    takeoffItemId: state.activeTakeoffId || '',
-    color: state.strokeColor,
-    lineWidth: state.lineWidth,
-  });
+  if (pts.length < (type === 'perimeter' ? 2 : 3)) { renderOverlay(); return; }
+  addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
+}
+
+async function onWheelZoom(e) {
+  if (!state.pdfBytes || !(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  const prevZoom = state.zoom;
+  const nextZoom = Math.max(0.25, Math.min(4, +(prevZoom + (e.deltaY < 0 ? 0.15 : -0.15)).toFixed(2)));
+  if (nextZoom === prevZoom) return;
+  const rect = scrollerEl.getBoundingClientRect();
+  const cx = e.clientX - rect.left + scrollerEl.scrollLeft;
+  const cy = e.clientY - rect.top + scrollerEl.scrollTop;
+  state.zoom = nextZoom;
+  await renderCurrentPage();
+  scrollerEl.scrollLeft = cx * (nextZoom / prevZoom) - (e.clientX - rect.left);
+  scrollerEl.scrollTop = cy * (nextZoom / prevZoom) - (e.clientY - rect.top);
 }
 
 export function renderOverlay() {
   if (!svgEl) return;
   svgEl.innerHTML = '';
-
-  // Arrowhead marker
   const defs = createSvg('defs');
-  const marker = createSvg('marker', {
-    id: 'arrowhead', markerWidth: 10, markerHeight: 7, refX: 9, refY: 3.5, orient: 'auto',
-  });
+  const marker = createSvg('marker', { id: 'arrowhead', markerWidth: 10, markerHeight: 7, refX: 9, refY: 3.5, orient: 'auto' });
   marker.appendChild(createSvg('polygon', { points: '0 0, 10 3.5, 0 7', fill: 'context-stroke' }));
   defs.appendChild(marker);
   svgEl.appendChild(defs);
 
-  const pageMarkups = state.markups.filter((m) => m.page === state.currentPage);
-  for (const m of pageMarkups) {
-    drawMarkup(m, m.id === state.selectedId);
+  for (const m of state.markups.filter((x) => x.page === state.currentPage)) {
+    drawMarkupSvg(svgEl, m, toScreen, state, m.id === state.selectedId, false);
   }
   if (draft) {
-    drawMarkup({
-      ...draft,
-      color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor,
-      lineWidth: state.lineWidth,
-    }, false, true);
+    drawMarkupSvg(svgEl, { ...draft, color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor, lineWidth: state.lineWidth }, toScreen, state, false, true);
   }
   if (activeSnapPt && state.osnap) {
     const sp = toScreen(activeSnapPt);
-    svgEl.appendChild(createSvg('rect', {
-      x: sp.x - 5, y: sp.y - 5, width: 10, height: 10,
-      fill: 'none', stroke: '#90472D', 'stroke-width': 2,
-    }));
+    svgEl.appendChild(createSvg('rect', { x: sp.x - 5, y: sp.y - 5, width: 10, height: 10, fill: 'none', stroke: '#90472D', 'stroke-width': 2 }));
   }
-}
-
-function drawMarkup(m, isSelected, isDraft = false) {
-  const pts = m.points.map(toScreen);
-  const g = createSvg('g', { opacity: isDraft ? '0.8' : '1' });
-  const stroke = isSelected ? '#0ea5e9' : (m.color || '#c0392b');
-  const sw = (m.lineWidth || 2) + (isSelected ? 1.5 : 0);
-
-  if (m.type === 'distance' || m.type === 'calibrate' || m.type === 'arrow' || m.type === 'callout') {
-    const [a, b] = pts;
-    const lineAttrs = {
-      x1: a.x, y1: a.y, x2: b.x, y2: b.y,
-      stroke, 'stroke-width': sw,
-      'stroke-dasharray': m.type === 'calibrate' ? '5,4' : '',
-    };
-    if (m.type === 'arrow' || m.type === 'callout') lineAttrs['marker-end'] = 'url(#arrowhead)';
-    g.appendChild(createSvg('line', lineAttrs));
-
-    if (m.type === 'distance' || m.type === 'calibrate') {
-      const lenPt = distPt(m.points[0], m.points[1]);
-      const label = m.type === 'calibrate'
-        ? `${(lenPt * state.zoom).toFixed(0)} px`
-        : formatLength(lenPt, state.unitsPerPt, state.unit);
-      drawBadge(g, (a.x + b.x) / 2, (a.y + b.y) / 2 - 8, label, stroke);
-    } else if (m.type === 'callout' && m.text) {
-      drawBadge(g, a.x, a.y - 8, m.text, stroke);
-    }
-  } else if (m.type === 'perimeter') {
-    const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
-    g.appendChild(createSvg('path', { d, fill: 'none', stroke, 'stroke-width': sw }));
-    const lenPt = polylineLength(m.points);
-    const last = pts[pts.length - 1];
-    drawBadge(g, last.x, last.y - 10, formatLength(lenPt, state.unitsPerPt, state.unit), stroke);
-  } else if (m.type === 'area') {
-    const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-    g.appendChild(createSvg('path', { d, fill: stroke, 'fill-opacity': '0.18', stroke, 'stroke-width': sw }));
-    const cx = pts.reduce((s, p) => s + p.x, 0) / pts.length;
-    const cy = pts.reduce((s, p) => s + p.y, 0) / pts.length;
-    const areaPt = polygonArea(m.points);
-    const perimPt = polygonPerimeter(m.points);
-    drawBadge(g, cx, cy, `${formatArea(areaPt, state.unitsPerPt, state.unit)} (P: ${formatLength(perimPt, state.unitsPerPt, state.unit)})`, stroke);
-  } else if (m.type === 'rect') {
-    const [a, b] = pts;
-    g.appendChild(createSvg('rect', {
-      x: Math.min(a.x, b.x), y: Math.min(a.y, b.y),
-      width: Math.abs(b.x - a.x), height: Math.abs(b.y - a.y),
-      fill: 'none', stroke, 'stroke-width': sw,
-    }));
-  } else if (m.type === 'cloud') {
-    const d = buildRevisionCloudPath(pts[0], pts[1], 14 * state.zoom);
-    if (d) g.appendChild(createSvg('path', { d, fill: stroke, 'fill-opacity': '0.07', stroke, 'stroke-width': sw }));
-  } else if (m.type === 'text') {
-    const t = createSvg('text', { x: pts[0].x, y: pts[0].y, fill: stroke, 'font-size': 13 * state.zoom, 'font-weight': '600' });
-    t.textContent = m.text;
-    g.appendChild(t);
-  } else if (m.type === 'count') {
-    const r = Math.max(9, 10 * state.zoom);
-    g.appendChild(createSvg('circle', { cx: pts[0].x, cy: pts[0].y, r, fill: stroke, stroke: '#ffffff', 'stroke-width': 1.8 }));
-    const t = createSvg('text', { x: pts[0].x, y: pts[0].y + 4, 'text-anchor': 'middle', fill: '#ffffff', 'font-size': 10 * Math.min(1.3, state.zoom), 'font-weight': '700' });
-    t.textContent = String(m.countNum || m.text || '1');
-    g.appendChild(t);
-  } else if (m.type === 'stamp') {
-    const stamp = m.stampData || { kind: 'badge', id: m.text, color: stroke };
-    drawStampSvg(g, pts[0], stamp, state.zoom, createSvg);
-  }
-
-  svgEl.appendChild(g);
-}
-
-function drawBadge(parent, x, y, text, color) {
-  const padX = 6;
-  const w = text.length * 6.8 + padX * 2;
-  const h = 18;
-  parent.appendChild(createSvg('rect', {
-    x: x - w / 2, y: y - h / 2, width: w, height: h, rx: 3,
-    fill: '#ffffff', stroke: color, 'stroke-width': 1,
-  }));
-  const t = createSvg('text', {
-    x, y: y + 4, 'text-anchor': 'middle', fill: '#183b3b',
-    'font-size': '11', 'font-family': 'Consolas, monospace', 'font-weight': '600',
-  });
-  t.textContent = text;
-  parent.appendChild(t);
-}
-
-function createSvg(tag, attrs = {}) {
-  const el = document.createElementNS(SVG_NS, tag);
-  for (const [k, v] of Object.entries(attrs)) {
-    if (v !== '') el.setAttribute(k, String(v));
-  }
-  return el;
 }

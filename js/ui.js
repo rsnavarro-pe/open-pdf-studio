@@ -11,17 +11,20 @@ import { renderComparison } from './compare.js';
 import { computeBoqRows } from './takeoff.js';
 
 const TOOL_HINTS = {
-  select: 'Click any markup or measurement to select it.',
+  select: 'Click to select, drag to move, or double-click text/callout to edit.',
   pan: 'Click and drag to pan the drawing.',
   calibrate: 'Click and drag between two points of a known dimension.',
   distance: 'Click and drag to measure a straight-line distance.',
   perimeter: 'Click points to trace a polyline; double-click or right-click to finish (Esc to cancel).',
   area: 'Click polygon vertices; double-click or right-click to finish (Esc to cancel).',
+  cutout: 'Click polygon vertices to subtract an opening from Area; double-click or right-click to finish.',
   count: 'Click to drop numbered count pins for the active takeoff item.',
   cloud: 'Click and drag to draw a revision cloud.',
   callout: 'Click and drag from label origin to target arrow.',
   arrow: 'Click and drag to draw a leader arrow.',
   rect: 'Click and drag to draw a rectangle.',
+  pen: 'Click and drag to draw freehand.',
+  highlight: 'Click and drag to highlight over drawing text or lines.',
   text: 'Click anywhere on the sheet to place a text note.',
   stamp: 'Click anywhere on the sheet to place the selected stamp.',
 };
@@ -117,6 +120,7 @@ function renderTakeoffSummary() {
     if (m.type === 'distance' && m.points.length >= 2) totalDist += distPt(m.points[0], m.points[1]);
     else if (m.type === 'perimeter') totalPerim += polylineLength(m.points);
     else if (m.type === 'area') { totalArea += polygonArea(m.points); totalPerim += polygonPerimeter(m.points); }
+    else if (m.type === 'cutout') { totalArea = Math.max(0, totalArea - polygonArea(m.points)); }
     else if (m.type === 'count') totalCount += 1;
   }
 

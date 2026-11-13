@@ -53,19 +53,21 @@ export function computeBoqRows() {
   }
 
   for (const m of state.markups) {
-    if (!['distance', 'perimeter', 'area', 'count'].includes(m.type)) continue;
-    const key = m.takeoffItemId && map.has(m.takeoffItemId) ? m.takeoffItemId : `unassigned-${m.type}`;
+    if (!['distance', 'perimeter', 'area', 'cutout', 'count'].includes(m.type)) continue;
+    const isCut = m.type === 'cutout';
+    const effType = isCut ? 'area' : m.type;
+    const key = m.takeoffItemId && map.has(m.takeoffItemId) ? m.takeoffItemId : `unassigned-${effType}`;
     if (!map.has(key)) {
       map.set(key, {
         id: key,
-        name: `General ${m.type}`,
+        name: `General ${effType}`,
         trade: 'General',
-        tool: m.type,
+        tool: effType,
         unitCost: 0,
         depth: 0,
         color: m.color || '#2C2C2E',
         qty: 0,
-        unitLabel: m.type === 'count' ? 'EA' : m.type === 'area' ? `${u}²` : u,
+        unitLabel: effType === 'count' ? 'EA' : effType === 'area' ? `${u}²` : u,
         volOrWall: 0,
         extCost: 0,
         hits: 0,
@@ -73,12 +75,13 @@ export function computeBoqRows() {
     }
 
     const row = map.get(key);
-    row.hits += 1;
+    if (!isCut) row.hits += 1;
     let delta = 0;
     if (m.type === 'count') delta = 1;
     else if (m.type === 'distance' && m.points.length >= 2) delta = distPt(m.points[0], m.points[1]) * factor;
     else if (m.type === 'perimeter') delta = polylineLength(m.points) * factor;
     else if (m.type === 'area') delta = polygonArea(m.points) * factor * factor;
+    else if (m.type === 'cutout') delta = -polygonArea(m.points) * factor * factor;
 
     row.qty += delta;
     if (row.depth > 0) {
