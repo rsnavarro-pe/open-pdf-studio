@@ -13,7 +13,7 @@
 .tools-status {
   background: var(--lcd-bg);
   color: var(--lcd-ink);
-  border: 1px solid #96a58b;
+  border: 1px solid #c9a799;
   border-radius: 4px;
   padding: 6px 10px;
   font-size: 12px;
@@ -29,7 +29,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: 6px;
   padding: 12px;
-  background: #fbfcfc;
+  background: #fdfcfb;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -77,6 +77,6 @@
   border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
-  background: #f9fbfa;
+  background: #F5F0EC;
   resize: vertical;
 }
