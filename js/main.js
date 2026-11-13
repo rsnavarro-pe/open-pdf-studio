@@ -17,7 +17,7 @@ import { initContextMenu } from './context-menu.js';
 import { initSearch } from './search.js';
 import { bindTakeoffEvents } from './takeoff.js';
 import { scheduleAutoSave, restoreLastSession, exportProjectJson, importProjectJson } from './storage.js';
-import { EMBEDDED_STAMPS } from './stamps.js';
+import { initMarkupProps } from './markup-props.js';
 import { initSignatureModal } from './signature.js';
 import { renderUI } from './ui.js';
 
@@ -31,7 +31,7 @@ async function init() {
   bindFileEvents();
   bindToolEvents();
   bindNavigationEvents();
-  bindPropertyEvents();
+  initMarkupProps();
   bindCompareEvents();
   bindCalibrationModal();
   bindKeyboardShortcuts();
@@ -144,48 +144,6 @@ function bindNavigationEvents() {
   document.getElementById('btn-rotate').addEventListener('click', async () => {
     state.rotation = (state.rotation + 90) % 360;
     await renderCurrentPage();
-  });
-}
-
-function bindPropertyEvents() {
-  document.getElementById('unit-select').addEventListener('change', (e) => {
-    convertUnit(state.unit, e.target.value);
-  });
-  document.getElementById('preset-scale').addEventListener('change', (e) => {
-    setPresetScale(e.target.value);
-  });
-  document.getElementById('prop-color').addEventListener('input', (e) => {
-    state.strokeColor = e.target.value;
-  });
-  const setHighlightColor = (hex) => {
-    state.highlightColor = hex;
-    document.getElementById('prop-highlight-color').value = hex;
-    document.querySelectorAll('.hi-swatch').forEach((b) => b.classList.toggle('active', b.dataset.color === hex));
-    const sel = state.selectedId ? state.markups.find((m) => m.id === state.selectedId) : null;
-    if (sel && (sel.type === 'highlight' || sel.type === 'note')) {
-      sel.color = hex;
-      notify();
-    }
-  };
-  document.getElementById('prop-highlight-color').addEventListener('input', (e) => setHighlightColor(e.target.value));
-  document.querySelectorAll('.hi-swatch').forEach((btn) => {
-    btn.addEventListener('click', () => setHighlightColor(btn.dataset.color));
-  });
-  document.getElementById('prop-width').addEventListener('input', (e) => {
-    state.lineWidth = Number(e.target.value) || 2;
-  });
-  const stampSel = document.getElementById('prop-stamp');
-  stampSel.innerHTML = '';
-  for (const s of EMBEDDED_STAMPS) {
-    const opt = document.createElement('option');
-    opt.value = s.id;
-    opt.textContent = s.label;
-    stampSel.appendChild(opt);
-  }
-  stampSel.value = state.stampType;
-  stampSel.addEventListener('change', (e) => {
-    state.stampType = e.target.value;
-    setTool('stamp');
   });
 }
 

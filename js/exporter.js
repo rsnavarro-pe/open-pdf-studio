@@ -25,21 +25,29 @@ export async function exportAnnotatedPdf() {
 
     if (['distance', 'arrow', 'callout', 'underline', 'strike'].includes(m.type) && m.points.length >= 2) {
       const [a, b] = m.points;
-      page.drawLine({
-        start: { x: a.x, y: toPdfY(a.y) },
-        end: { x: b.x, y: toPdfY(b.y) },
-        thickness: sw,
-        color,
-      });
-      const label = m.type === 'distance'
-        ? formatLength(distPt(a, b), state.unitsPerPt, state.unit)
-        : (m.text || '');
-      if (label) {
-        page.drawText(label, {
-          x: m.type === 'callout' ? a.x : (a.x + b.x) / 2,
-          y: toPdfY(m.type === 'callout' ? a.y : (a.y + b.y) / 2) + 6,
-          size: 10, font, color,
-        });
+      const fSize = m.fontSize || 11;
+      const arrSize = m.arrowSize || 11;
+      if (m.type === 'callout') {
+        const knee = { x: a.x + (b.x >= a.x ? 18 : -18), y: a.y };
+        page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: knee.x, y: toPdfY(knee.y) }, thickness: sw, color });
+        page.drawLine({ start: { x: knee.x, y: toPdfY(knee.y) }, end: { x: b.x, y: toPdfY(b.y) }, thickness: sw, color });
+        drawArrowPdf(page, knee, b, toPdfY, arrSize, sw, color);
+        const lbl = m.text || 'CALLOUT';
+        const bw = Math.max(42, lbl.length * (fSize * 0.56) + 12);
+        const bh = fSize + 8;
+        const bx = b.x >= a.x ? a.x - bw : a.x;
+        page.drawRectangle({ x: bx, y: toPdfY(a.y) - bh / 2, width: bw, height: bh, color: hexToRgb(m.fillColor || '#ffffff', rgb), borderColor: color, borderWidth: Math.max(1, sw * 0.8) });
+        page.drawText(lbl, { x: bx + 6, y: toPdfY(a.y) - fSize * 0.32, size: fSize, font, color });
+      } else {
+        page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: b.x, y: toPdfY(b.y) }, thickness: sw, color });
+        if (m.type === 'arrow') {
+          drawArrowPdf(page, a, b, toPdfY, arrSize, sw, color);
+          if (m.arrowHead === 'both') drawArrowPdf(page, b, a, toPdfY, arrSize, sw, color);
+        }
+        if (m.type === 'distance') {
+          const label = formatLength(distPt(a, b), state.unitsPerPt, state.unit);
+          page.drawText(label, { x: (a.x + b.x) / 2, y: toPdfY((a.y + b.y) / 2) + 6, size: 10, font, color });
+        }
       }
     } else if (m.type === 'perimeter' && m.points.length >= 2) {
       drawPoly(page, m.points, toPdfY, sw, color, false);
@@ -87,9 +95,12 @@ export async function exportAnnotatedPdf() {
         height: Math.max(10, Math.abs(b.y - a.y)),
       });
     } else if (m.type === 'cloud' && m.points.length >= 2) {
-      const svgPath = buildRevisionCloudPath(m.points[0], m.points[1], 14);
+      const svgPath = buildRevisionCloudPath(m.points[0], m.points[1], m.cloudArc || 14);
       if (svgPath) {
         page.drawSvgPath(svgPath, { x: 0, y: height, borderColor: color, borderWidth: sw });
+      }
+      if (m.text) {
+        page.drawText(`REV ${m.text}`, { x: Math.min(m.points[0].x, m.points[1].x) + 4, y: toPdfY(Math.min(m.points[0].y, m.points[1].y)) + 4, size: 9, font, color });
       }
     } else if (m.type === 'note' && m.points.length >= 1) {
       const p = m.points[0];
@@ -100,7 +111,7 @@ export async function exportAnnotatedPdf() {
         page.drawText(m.text, { x: p.x + 12, y: py - 4, size: 10, font, color: rgb(0.17, 0.17, 0.18) });
       }
     } else if (m.type === 'text' && m.points.length >= 1) {
-      page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: 12, font, color });
+      page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: m.fontSize || 12, font, color });
     } else if (m.type === 'count' && m.points.length >= 1) {
       const p = m.points[0];
       page.drawCircle({ x: p.x, y: toPdfY(p.y), size: 9, color, borderColor: rgb(1, 1, 1), borderWidth: 1.2 });
@@ -150,6 +161,23 @@ function drawPoly(page, pts, toPdfY, sw, color, close) {
       thickness: sw, color,
     });
   }
+}
+
+function drawArrowPdf(page, fromPt, tipPt, toPdfY, size, sw, color) {
+  const dx = tipPt.x - fromPt.x;
+  const dy = tipPt.y - fromPt.y;
+  const len = Math.hypot(dx, dy);
+  if (len < 2) return;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  const s = Math.max(6, size);
+  const w = s * 0.44;
+  const bx = tipPt.x - ux * s;
+  const by = tipPt.y - uy * s;
+  page.drawLine({ start: { x: bx + px * w, y: toPdfY(by + py * w) }, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
+  page.drawLine({ start: { x: bx - px * w, y: toPdfY(by - py * w) }, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
 }
 
 function hexToRgb(hex, rgbFn) {

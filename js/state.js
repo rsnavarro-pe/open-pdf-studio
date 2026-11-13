@@ -18,8 +18,18 @@ export const state = {
 
   // Style defaults
   strokeColor: '#c0392b',
+  fillColor: '#ffffff',
+  fillOpacity: 0.12,
   highlightColor: '#facc15',
   lineWidth: 2,
+  lineStyle: 'solid', // solid | dashed | dotted
+  fontFamily: 'Helvetica', // Helvetica | Courier | Times
+  fontSize: 13,
+  fontBold: true,
+  fontItalic: false,
+  arrowHead: 'closed', // closed | open | slash | dot | both
+  arrowSize: 11,
+  cloudArc: 14,
   stampType: 'RSN APPROVED',
   signatureDataUrl: null,
 

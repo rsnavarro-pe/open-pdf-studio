@@ -6,6 +6,7 @@ import {
   formatLength, formatArea, buildRevisionCloudPath,
 } from './geometry.js';
 import { drawStampSvg } from './stamp-renderer.js';
+import { getFontStack, getDashArray, drawArrowHeadSvg } from './markup-props.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -24,19 +25,44 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
   const fallback = (m.type === 'highlight' || m.type === 'note') ? (state.highlightColor || '#facc15') : '#c0392b';
   const stroke = isSelected ? '#0ea5e9' : (m.color || fallback);
   const sw = (m.lineWidth || 2) + (isSelected ? 1.5 : 0);
+  const dash = m.type === 'calibrate' ? '5,4' : getDashArray(m.lineStyle || 'solid', sw);
+  const fillCol = m.fillColor || '#ffffff';
+  const fillOp = m.fillOpacity != null ? String(m.fillOpacity) : '0.12';
+  const fontFam = getFontStack(m.fontFamily || state.fontFamily);
+  const fSize = (m.fontSize || state.fontSize || 13) * state.zoom;
+  const fWeight = (m.fontBold ?? true) ? '700' : '400';
+  const fStyle = m.fontItalic ? 'italic' : 'normal';
+  const arrStyle = m.arrowHead || state.arrowHead || 'closed';
+  const arrSize = (m.arrowSize || state.arrowSize || 11) * state.zoom;
 
   if (['distance', 'calibrate', 'arrow', 'callout', 'underline', 'strike'].includes(m.type)) {
     const [a, b] = pts;
-    const attrs = { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke, 'stroke-width': sw, 'stroke-dasharray': m.type === 'calibrate' ? '5,4' : '' };
-    if (m.type === 'arrow' || m.type === 'callout') attrs['marker-end'] = 'url(#arrowhead)';
-    g.appendChild(createSvg('line', attrs));
-
-    if (m.type === 'distance' || m.type === 'calibrate') {
-      const lenPt = distPt(m.points[0], m.points[1]);
-      const lbl = m.type === 'calibrate' ? `${(lenPt * state.zoom).toFixed(0)} px` : formatLength(lenPt, state.unitsPerPt, state.unit);
-      drawBadge(g, (a.x + b.x) / 2, (a.y + b.y) / 2 - 8, lbl, stroke);
-    } else if (m.type === 'callout' && m.text) {
-      drawBadge(g, a.x, a.y - 8, m.text, stroke);
+    if (m.type === 'callout') {
+      const kneeX = a.x + (b.x >= a.x ? 20 * state.zoom : -20 * state.zoom);
+      const knee = { x: kneeX, y: a.y };
+      g.appendChild(createSvg('polyline', { points: `${a.x},${a.y} ${knee.x},${knee.y} ${b.x},${b.y}`, fill: 'none', stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
+      drawArrowHeadSvg(g, knee, b, arrStyle, arrSize, stroke, sw, createSvg);
+      const lbl = m.text || 'CALLOUT';
+      const bw = Math.max(46, lbl.length * (fSize * 0.58) + 16);
+      const bh = fSize + 10;
+      const bx = b.x >= a.x ? a.x - bw : a.x;
+      g.appendChild(createSvg('rect', { x: bx, y: a.y - bh / 2, width: bw, height: bh, rx: 3, fill: fillCol, 'fill-opacity': '0.96', stroke, 'stroke-width': Math.max(1.2, sw * 0.8) }));
+      const ct = createSvg('text', { x: bx + bw / 2, y: a.y + fSize * 0.34, 'text-anchor': 'middle', fill: m.color || '#2C2C2E', 'font-family': fontFam, 'font-size': fSize, 'font-weight': fWeight, 'font-style': fStyle });
+      ct.textContent = lbl;
+      g.appendChild(ct);
+    } else {
+      g.appendChild(createSvg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
+      if (m.type === 'arrow') {
+        drawArrowHeadSvg(g, a, b, arrStyle, arrSize, stroke, sw, createSvg);
+        if (arrStyle === 'both') drawArrowHeadSvg(g, b, a, 'closed', arrSize, stroke, sw, createSvg);
+      }
+      if (m.type === 'distance' || m.type === 'calibrate') {
+        drawArrowHeadSvg(g, a, b, 'slash', 8 * state.zoom, stroke, sw, createSvg);
+        drawArrowHeadSvg(g, b, a, 'slash', 8 * state.zoom, stroke, sw, createSvg);
+        const lenPt = distPt(m.points[0], m.points[1]);
+        const lbl = m.type === 'calibrate' ? `${(lenPt * state.zoom).toFixed(0)} px` : formatLength(lenPt, state.unitsPerPt, state.unit);
+        drawBadge(g, (a.x + b.x) / 2, (a.y + b.y) / 2 - 10, lbl, stroke);
+      }
     }
   } else if (m.type === 'perimeter') {
     const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
@@ -75,10 +101,10 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
     const rh = Math.abs(b.y - a.y);
     g.appendChild(createSvg('rect', {
       x: rx, y: ry, width: rw, height: rh,
-      fill: isRed ? '#111111' : 'none',
-      'fill-opacity': isRed ? '0.88' : '1',
+      fill: isRed ? '#111111' : fillCol,
+      'fill-opacity': isRed ? '0.88' : fillOp,
       stroke: isRed ? (isSelected ? '#0ea5e9' : '#c0392b') : stroke,
-      'stroke-width': sw,
+      'stroke-width': sw, 'stroke-dasharray': isRed ? '' : dash,
     }));
     if (isRed && rw > 44 && rh > 16) {
       const rt = createSvg('text', { x: rx + rw / 2, y: ry + rh / 2 + 4, 'text-anchor': 'middle', fill: '#fca5a5', 'font-size': 10, 'font-weight': '700' });
@@ -99,8 +125,17 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
       g.appendChild(createSvg('rect', { x: rx, y: ry, width: rw, height: rh, fill: 'none', stroke: '#0ea5e9', 'stroke-dasharray': '4,3', 'stroke-width': 1.3 }));
     }
   } else if (m.type === 'cloud') {
-    const d = buildRevisionCloudPath(pts[0], pts[1], 14 * state.zoom);
-    if (d) g.appendChild(createSvg('path', { d, fill: stroke, 'fill-opacity': '0.07', stroke, 'stroke-width': sw }));
+    const arcPx = Math.max(6, (m.cloudArc || state.cloudArc || 14) * state.zoom);
+    const d = buildRevisionCloudPath(pts[0], pts[1], arcPx);
+    if (d) g.appendChild(createSvg('path', { d, fill: m.fillColor || stroke, 'fill-opacity': fillOp, stroke, 'stroke-width': sw, 'stroke-dasharray': dash }));
+    if (m.text && m.text.trim()) {
+      const tx = Math.min(pts[0].x, pts[1].x) + 14;
+      const ty = Math.min(pts[0].y, pts[1].y) - 6;
+      g.appendChild(createSvg('polygon', { points: `${tx},${ty - 14} ${tx - 11},${ty + 4} ${tx + 11},${ty + 4}`, fill: '#ffffff', stroke, 'stroke-width': 1.5 }));
+      const dt = createSvg('text', { x: tx, y: ty + 2, 'text-anchor': 'middle', fill: stroke, 'font-size': 9.5, 'font-weight': '700' });
+      dt.textContent = m.text.trim().slice(0, 5);
+      g.appendChild(dt);
+    }
   } else if (m.type === 'note') {
     const noteFill = m.color || state.highlightColor || '#facc15';
     const border = isSelected ? '#0ea5e9' : '#2C2C2E';
@@ -123,8 +158,13 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
       g.appendChild(nt);
     }
   } else if (m.type === 'text') {
-    const t = createSvg('text', { x: pts[0].x, y: pts[0].y, fill: stroke, 'font-size': 13 * state.zoom, 'font-weight': '600' });
-    t.textContent = m.text;
+    const txt = m.text || '';
+    if ((m.fillOpacity ?? 0) > 0.02) {
+      const tw = Math.max(32, txt.length * (fSize * 0.56) + 12);
+      g.appendChild(createSvg('rect', { x: pts[0].x - 5, y: pts[0].y - fSize, width: tw, height: fSize + 8, rx: 3, fill: fillCol, 'fill-opacity': fillOp, stroke: isSelected ? '#0ea5e9' : 'none', 'stroke-width': 1 }));
+    }
+    const t = createSvg('text', { x: pts[0].x, y: pts[0].y, fill: m.color || stroke, 'font-family': fontFam, 'font-size': fSize, 'font-weight': fWeight, 'font-style': fStyle });
+    t.textContent = txt;
     g.appendChild(t);
   } else if (m.type === 'count') {
     const r = Math.max(9, 10 * state.zoom);
@@ -134,6 +174,12 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
     g.appendChild(t);
   } else if (m.type === 'stamp') {
     drawStampSvg(g, pts[0], m.stampData || { kind: 'badge', id: m.text, color: stroke }, state.zoom, createSvg);
+  }
+
+  if (isSelected && !['pen', 'highlight'].includes(m.type)) {
+    for (const p of pts) {
+      g.appendChild(createSvg('circle', { cx: p.x, cy: p.y, r: 4.5, fill: '#ffffff', stroke: '#0ea5e9', 'stroke-width': 2 }));
+    }
   }
 
   svgEl.appendChild(g);

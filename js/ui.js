@@ -9,6 +9,7 @@ import {
 import { renderOverlay } from './overlay.js';
 import { renderComparison } from './compare.js';
 import { computeBoqRows } from './takeoff.js';
+import { syncPropsCardFromState } from './markup-props.js';
 
 const TOOL_HINTS = {
   select: 'Click to select, drag to move, or double-click text/callout to edit.',
@@ -77,6 +78,7 @@ export function renderUI() {
 
   renderMarkupsInspector();
   renderTakeoffSummary();
+  syncPropsCardFromState();
   renderOverlay();
   renderComparison();
 }

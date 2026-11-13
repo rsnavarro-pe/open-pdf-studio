@@ -230,11 +230,35 @@
           <p class="prop-note">Tip: Use <strong>Calibrate</strong> to click two points on a known dimension line.</p>
         </div>
 
-        <div class="prop-section">
-          <h3>Annotation Style</h3>
+        <div class="prop-section" id="props-card">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <h3>Properties &amp; Style</h3>
+            <span id="prop-target-badge" class="mono" style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--lcd-bg);color:var(--accent-primary)">Defaults</span>
+          </div>
           <div class="prop-row">
-            <label for="prop-color">Stroke Color</label>
-            <input id="prop-color" type="color" value="#c0392b" />
+            <label for="prop-text-content">Text / Tag</label>
+            <input id="prop-text-content" type="text" placeholder="Text, Callout, Note, or Rev #" style="flex:1;min-width:0" />
+          </div>
+          <div class="prop-row">
+            <label for="prop-font-family">Font</label>
+            <div style="display:flex;gap:4px;flex:1;min-width:0">
+              <select id="prop-font-family" style="flex:1;min-width:0">
+                <option value="Helvetica">Sans (Aptos/Arial)</option>
+                <option value="Courier">Mono (CAD)</option>
+                <option value="Times">Serif (Times)</option>
+              </select>
+              <input id="prop-font-size" type="number" min="7" max="60" value="13" style="width:48px" title="Font Size (pt)" />
+              <button type="button" id="prop-font-bold" class="btn-icon active" style="padding:2px 6px;font-weight:700" title="Bold">B</button>
+              <button type="button" id="prop-font-italic" class="btn-icon" style="padding:2px 6px;font-style:italic" title="Italic">I</button>
+            </div>
+          </div>
+          <div class="prop-row">
+            <label for="prop-color">Stroke / Fill</label>
+            <div style="display:flex;align-items:center;gap:6px">
+              <input id="prop-color" type="color" value="#c0392b" title="Stroke / Text Color" />
+              <input id="prop-fill-color" type="color" value="#ffffff" title="Fill / Box Color" />
+              <input id="prop-fill-opacity" type="range" min="0" max="100" value="12" style="width:64px" title="Fill Opacity (%)" />
+            </div>
           </div>
           <div class="prop-row">
             <label for="prop-highlight-color">Highlight / Note</label>
@@ -249,8 +273,32 @@
             </div>
           </div>
           <div class="prop-row">
-            <label for="prop-width">Line Width</label>
-            <input id="prop-width" type="range" min="1" max="8" value="2" />
+            <label for="prop-width">Line Width / Style</label>
+            <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+              <input id="prop-width" type="range" min="1" max="10" value="2" style="flex:1" />
+              <select id="prop-line-style" style="width:78px">
+                <option value="solid">Solid</option>
+                <option value="dashed">Dashed</option>
+                <option value="dotted">Dotted</option>
+              </select>
+            </div>
+          </div>
+          <div class="prop-row">
+            <label for="prop-arrow-head">Arrowhead</label>
+            <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+              <select id="prop-arrow-head" style="flex:1;min-width:0">
+                <option value="closed">Filled Arrow</option>
+                <option value="open">Open V-Arrow</option>
+                <option value="slash">45° Arch Tick</option>
+                <option value="dot">Leader Dot</option>
+                <option value="both">Double-Ended</option>
+              </select>
+              <input id="prop-arrow-size" type="number" min="6" max="28" value="11" style="width:46px" title="Arrowhead Size (pt)" />
+            </div>
+          </div>
+          <div class="prop-row">
+            <label for="prop-cloud-arc">Cloud Arc (pt)</label>
+            <input id="prop-cloud-arc" type="range" min="6" max="32" value="14" />
           </div>
           <div class="prop-row">
             <label for="prop-stamp">Stamp Type</label>

@@ -8,6 +8,7 @@ import { findNearestSnap } from './osnap.js';
 import { renderCurrentPage } from './pdf-engine.js';
 import { screenToPdf, pdfToScreen, distPt, hitTestMarkup } from './geometry.js';
 import { createSvg, drawMarkupSvg, createWheelZoomHandler } from './overlay-draw.js';
+import { getDefaultMarkupStyle, focusPropTextEditor } from './markup-props.js';
 
 let svgEl = null;
 let scrollerEl = null;
@@ -71,27 +72,33 @@ function onPointerDown(e) {
 
   if (tool === 'select') {
     const pageMarkups = state.markups.filter((m) => m.page === state.currentPage);
+    const curSel = state.selectedId ? pageMarkups.find((m) => m.id === state.selectedId) : null;
+    if (curSel) {
+      const vIdx = curSel.points.findIndex((v) => distPt(v, pt) <= 9 / state.zoom);
+      if (vIdx >= 0) {
+        dragMove = { markup: curSel, lastPt: pt, vertexIdx: vIdx, pushed: false };
+        svgEl.setPointerCapture(e.pointerId);
+        return;
+      }
+    }
     const hit = [...pageMarkups].reverse().find((m) => hitTestMarkup(m, pt, 10 / state.zoom));
     state.selectedId = hit ? hit.id : null;
     if (hit) {
-      dragMove = { markup: hit, lastPt: pt, pushed: false };
+      dragMove = { markup: hit, lastPt: pt, vertexIdx: null, pushed: false };
       svgEl.setPointerCapture(e.pointerId);
     }
     notify();
     return;
   }
 
-  if (tool === 'text') {
-    const text = window.prompt('Enter annotation text:', 'NOTE: Verify field dimension');
-    if (!text) return;
-    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'text', points: [pt], text, color: state.strokeColor, lineWidth: state.lineWidth });
-    return;
-  }
-
-  if (tool === 'note') {
-    const text = window.prompt('Sticky note comment:', '');
-    if (!text || !text.trim()) return;
-    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'note', points: [pt], text: text.trim(), color: state.highlightColor, lineWidth: state.lineWidth });
+  if (tool === 'text' || tool === 'note') {
+    const presetTxt = (document.getElementById('prop-text-content')?.value || '').trim();
+    const defTxt = tool === 'note' ? 'Review comment' : 'NOTE: Verify dimension';
+    const id = crypto.randomUUID();
+    addMarkup({ id, page: state.currentPage, type: tool, points: [pt], text: presetTxt || defTxt, ...getDefaultMarkupStyle(tool) });
+    state.selectedId = id;
+    notify();
+    focusPropTextEditor(true);
     return;
   }
 
@@ -146,7 +153,11 @@ function onPointerMove(e) {
     const dy = pt.y - dragMove.lastPt.y;
     if (Math.hypot(dx, dy) > 0.5) {
       if (!dragMove.pushed) { pushHistory(); dragMove.pushed = true; }
-      dragMove.markup.points = dragMove.markup.points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+      if (dragMove.vertexIdx != null) {
+        dragMove.markup.points[dragMove.vertexIdx] = { x: pt.x, y: pt.y };
+      } else {
+        dragMove.markup.points = dragMove.markup.points.map((p) => ({ x: p.x + dx, y: p.y + dy }));
+      }
       dragMove.lastPt = pt;
       renderOverlay();
     }
@@ -183,8 +194,7 @@ function onPointerUp() {
     const type = draft.type;
     draft = null;
     if (pts.length >= 2) {
-      const color = type === 'highlight' ? state.highlightColor : state.strokeColor;
-      addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, color, lineWidth: state.lineWidth });
+      addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: pts, ...getDefaultMarkupStyle(type) });
     } else renderOverlay();
     return;
   }
@@ -196,32 +206,30 @@ function onPointerUp() {
   if (type === 'sign') {
     if (!state.signatureDataUrl) { renderOverlay(); return; }
     const endPt = span < 8 ? { x: p0.x + 130, y: p0.y + 52 } : p1;
-    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'sign', points: [p0, endPt], text: 'Signature', sigDataUrl: state.signatureDataUrl, color: state.strokeColor, lineWidth: state.lineWidth });
+    addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type: 'sign', points: [p0, endPt], text: 'Signature', sigDataUrl: state.signatureDataUrl, ...getDefaultMarkupStyle('sign') });
     return;
   }
   if (span < 3) { renderOverlay(); return; }
   if (type === 'calibrate') { if (onCalibrateCallback) onCalibrateCallback(span); renderOverlay(); return; }
 
-  let text = '';
+  const presetTxt = (document.getElementById('prop-text-content')?.value || '').trim();
+  const text = type === 'callout' ? (presetTxt || 'DETAIL REF') : (type === 'cloud' ? presetTxt : '');
+  const id = crypto.randomUUID();
+  addMarkup({ id, page: state.currentPage, type, points: [p0, p1], text, takeoffItemId: state.activeTakeoffId || '', ...getDefaultMarkupStyle(type) });
   if (type === 'callout') {
-    text = window.prompt('Callout label:', 'DETAIL REF') || '';
-    if (!text) { renderOverlay(); return; }
+    state.selectedId = id;
+    notify();
+    focusPropTextEditor(true);
   }
-  addMarkup({ id: crypto.randomUUID(), page: state.currentPage, type, points: [p0, p1], text, takeoffItemId: state.activeTakeoffId || '', color: state.strokeColor, lineWidth: state.lineWidth });
 }
 
 function onDoubleClick(e) {
   if (draft && draft.multi) { finishMultiDraft(); return; }
   if (state.activeTool === 'select' && state.selectedId) {
     const m = state.markups.find((x) => x.id === state.selectedId);
-    if (m && (m.type === 'text' || m.type === 'callout' || m.type === 'note')) {
+    if (m && ['text', 'callout', 'note', 'cloud'].includes(m.type)) {
       e.preventDefault();
-      const updated = window.prompt(m.type === 'note' ? 'Edit sticky note comment:' : 'Edit label:', m.text || '');
-      if (updated !== null && updated.trim()) {
-        pushHistory();
-        m.text = updated.trim();
-        notify();
-      }
+      focusPropTextEditor(true);
     }
   }
 }
