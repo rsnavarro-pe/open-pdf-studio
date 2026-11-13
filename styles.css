@@ -227,8 +227,6 @@ body {
   overflow: auto;
   position: relative;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
   padding: 20px;
 }
 
@@ -245,6 +243,8 @@ body {
 
 .page-stage {
   position: relative;
+  margin: auto;
+  flex-shrink: 0;
   background: #fff;
   box-shadow: 0 4px 18px rgba(0, 0, 0, 0.14);
 }
