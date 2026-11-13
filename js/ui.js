@@ -8,6 +8,7 @@ import {
 } from './geometry.js';
 import { renderOverlay } from './overlay.js';
 import { renderComparison } from './compare.js';
+import { computeBoqRows } from './takeoff.js';
 
 const TOOL_HINTS = {
   select: 'Click any markup or measurement to select it.',
@@ -16,6 +17,7 @@ const TOOL_HINTS = {
   distance: 'Click and drag to measure a straight-line distance.',
   perimeter: 'Click points to trace a polyline; double-click or right-click to finish (Esc to cancel).',
   area: 'Click polygon vertices; double-click or right-click to finish (Esc to cancel).',
+  count: 'Click to drop numbered count pins for the active takeoff item.',
   cloud: 'Click and drag to draw a revision cloud.',
   callout: 'Click and drag from label origin to target arrow.',
   arrow: 'Click and drag to draw a leader arrow.',
@@ -38,6 +40,7 @@ export function renderUI() {
   document.getElementById('btn-export-pdf').disabled = !hasDoc;
   document.getElementById('btn-export-dxf').disabled = !hasDoc;
   document.getElementById('btn-export-csv').disabled = !hasDoc || state.markups.length === 0;
+  document.getElementById('btn-export-boq').disabled = !hasDoc || state.markups.length === 0;
   document.getElementById('btn-undo').disabled = state.undoStack.length === 0;
   document.getElementById('btn-redo').disabled = state.redoStack.length === 0;
   document.getElementById('btn-delete-selected').disabled = !state.selectedId;
@@ -106,24 +109,35 @@ function renderMarkupsInspector() {
 }
 
 function renderTakeoffSummary() {
-  let totalDist = 0;
-  let totalPerim = 0;
-  let totalArea = 0;
+  let totalDist = 0, totalPerim = 0, totalArea = 0, totalCount = 0;
 
   for (const m of state.markups) {
-    if (m.type === 'distance' && m.points.length >= 2) {
-      totalDist += distPt(m.points[0], m.points[1]);
-    } else if (m.type === 'perimeter') {
-      totalPerim += polylineLength(m.points);
-    } else if (m.type === 'area') {
-      totalArea += polygonArea(m.points);
-      totalPerim += polygonPerimeter(m.points);
-    }
+    if (m.type === 'distance' && m.points.length >= 2) totalDist += distPt(m.points[0], m.points[1]);
+    else if (m.type === 'perimeter') totalPerim += polylineLength(m.points);
+    else if (m.type === 'area') { totalArea += polygonArea(m.points); totalPerim += polygonPerimeter(m.points); }
+    else if (m.type === 'count') totalCount += 1;
   }
 
   document.getElementById('sum-distance').textContent = formatLength(totalDist, state.unitsPerPt, state.unit);
   document.getElementById('sum-perimeter').textContent = formatLength(totalPerim, state.unitsPerPt, state.unit);
   document.getElementById('sum-area').textContent = formatArea(totalArea, state.unitsPerPt, state.unit);
+  document.getElementById('sum-count').textContent = `${totalCount} EA`;
+
+  const { rows, grandTotal } = computeBoqRows();
+  const boqEl = document.getElementById('boq-list');
+  boqEl.innerHTML = '';
+  for (const r of rows) {
+    if (r.hits === 0) continue;
+    const div = document.createElement('div');
+    div.className = 'boq-row';
+    const qtyStr = r.tool === 'count' ? `${r.qty} EA` : `${r.qty.toFixed(2)} ${r.unitLabel}`;
+    div.innerHTML = `
+      <span class="boq-row-name" style="color:${r.color}">${escapeHtml(r.name)}</span>
+      <span class="boq-row-meta">${qtyStr} | $${r.extCost.toFixed(2)}</span>
+    `;
+    boqEl.appendChild(div);
+  }
+  document.getElementById('boq-grand-total').textContent = `$${grandTotal.toFixed(2)}`;
 }
 
 function escapeHtml(str) {

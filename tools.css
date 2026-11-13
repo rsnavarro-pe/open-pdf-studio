@@ -121,3 +121,57 @@
   background: var(--border-subtle);
   margin: 4px 0;
 }
+
+.takeoff-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.takeoff-picker select {
+  flex: 1;
+  min-width: 0;
+}
+
+.boq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+}
+
+.boq-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 6px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px;
+  background: #fdfcfb;
+  font-size: 11px;
+}
+
+.boq-row-name {
+  font-weight: 600;
+  color: var(--text-main);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.boq-row-meta {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.boq-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 12px;
+}

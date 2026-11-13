@@ -4,6 +4,7 @@
 import { state, addMarkup, setTool, notify } from './state.js';
 import { buildStampPayload } from './stamps.js';
 import { drawStampSvg } from './stamp-renderer.js';
+import { nextCountNumber } from './takeoff.js';
 import {
   screenToPdf, pdfToScreen, distPt, polylineLength,
   polygonPerimeter, polygonArea, formatLength, formatArea,
@@ -83,6 +84,22 @@ function onPointerDown(e) {
       type: 'text',
       points: [pt],
       text,
+      color: state.strokeColor,
+      lineWidth: state.lineWidth,
+    });
+    return;
+  }
+
+  if (tool === 'count') {
+    const num = nextCountNumber(state.activeTakeoffId);
+    addMarkup({
+      id: crypto.randomUUID(),
+      page: state.currentPage,
+      type: 'count',
+      points: [pt],
+      countNum: num,
+      text: `#${num}`,
+      takeoffItemId: state.activeTakeoffId || '',
       color: state.strokeColor,
       lineWidth: state.lineWidth,
     });
@@ -180,6 +197,7 @@ function onPointerUp(e) {
     type,
     points: [p0, p1],
     text,
+    takeoffItemId: state.activeTakeoffId || '',
     color: state.strokeColor,
     lineWidth: state.lineWidth,
   });
@@ -211,6 +229,7 @@ function finishMultiDraft() {
     page: state.currentPage,
     type,
     points: pts,
+    takeoffItemId: state.activeTakeoffId || '',
     color: state.strokeColor,
     lineWidth: state.lineWidth,
   });
@@ -294,6 +313,12 @@ function drawMarkup(m, isSelected, isDraft = false) {
   } else if (m.type === 'text') {
     const t = createSvg('text', { x: pts[0].x, y: pts[0].y, fill: stroke, 'font-size': 13 * state.zoom, 'font-weight': '600' });
     t.textContent = m.text;
+    g.appendChild(t);
+  } else if (m.type === 'count') {
+    const r = Math.max(9, 10 * state.zoom);
+    g.appendChild(createSvg('circle', { cx: pts[0].x, cy: pts[0].y, r, fill: stroke, stroke: '#ffffff', 'stroke-width': 1.8 }));
+    const t = createSvg('text', { x: pts[0].x, y: pts[0].y + 4, 'text-anchor': 'middle', fill: '#ffffff', 'font-size': 10 * Math.min(1.3, state.zoom), 'font-weight': '700' });
+    t.textContent = String(m.countNum || m.text || '1');
     g.appendChild(t);
   } else if (m.type === 'stamp') {
     const stamp = m.stampData || { kind: 'badge', id: m.text, color: stroke };

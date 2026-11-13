@@ -70,6 +70,10 @@ export async function exportAnnotatedPdf() {
       }
     } else if (m.type === 'text' && m.points.length >= 1) {
       page.drawText(m.text || '', { x: m.points[0].x, y: toPdfY(m.points[0].y), size: 12, font, color });
+    } else if (m.type === 'count' && m.points.length >= 1) {
+      const p = m.points[0];
+      page.drawCircle({ x: p.x, y: toPdfY(p.y), size: 9, color, borderColor: rgb(1, 1, 1), borderWidth: 1.2 });
+      page.drawText(String(m.countNum || 1), { x: p.x - 3, y: toPdfY(p.y) - 3.5, size: 9, font, color: rgb(1, 1, 1) });
     } else if (m.type === 'stamp' && m.points.length >= 1) {
       const stamp = m.stampData || { kind: 'badge', id: m.text || 'APPROVED', color: m.color };
       drawStampPdf(page, m.points[0], stamp, font, rgb, hexToRgb);

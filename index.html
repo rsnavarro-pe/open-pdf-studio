@@ -61,6 +61,7 @@
           <button class="tool-btn" data-tool="distance" title="Measure Distance (M)">Distance</button>
           <button class="tool-btn" data-tool="perimeter" title="Measure Perimeter (P)">Perimeter</button>
           <button class="tool-btn" data-tool="area" title="Measure Area (A)">Area</button>
+          <button class="tool-btn" data-tool="count" title="Count Items (K)">Count</button>
         </div>
         <div class="tool-sep"></div>
         <div class="tool-group">
@@ -223,11 +224,26 @@
         </div>
 
         <div class="prop-section">
-          <h3>Takeoff Summary</h3>
+          <h3>Takeoff &amp; BOQ</h3>
+          <div class="prop-row">
+            <label for="takeoff-item-select">Active Takeoff Item</label>
+            <div class="takeoff-picker">
+              <select id="takeoff-item-select">
+                <option value="">-- General Measurement --</option>
+              </select>
+              <button id="btn-add-takeoff-item" class="btn btn-secondary btn-sm" title="Create new takeoff item">+ Item</button>
+            </div>
+          </div>
           <div id="takeoff-summary" class="takeoff-summary">
             <div class="summary-row"><span>Total Distance:</span><strong id="sum-distance" class="mono">0.00</strong></div>
             <div class="summary-row"><span>Total Perimeter:</span><strong id="sum-perimeter" class="mono">0.00</strong></div>
             <div class="summary-row"><span>Total Area:</span><strong id="sum-area" class="mono">0.00</strong></div>
+            <div class="summary-row"><span>Total Count:</span><strong id="sum-count" class="mono">0 EA</strong></div>
+          </div>
+          <div id="boq-list" class="boq-list"></div>
+          <div class="boq-footer">
+            <span>Est. Total: <strong id="boq-grand-total" class="mono">$0.00</strong></span>
+            <button id="btn-export-boq" class="btn btn-primary btn-sm" disabled>Export BOQ</button>
           </div>
         </div>
       </aside>
@@ -389,6 +405,31 @@
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>
+    </div>
+  </div>
+
+  <!-- New Takeoff Item Modal -->
+  <div id="takeoff-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3>New Takeoff Item</h3>
+      <div class="prop-row"><label for="to-name">Item Name</label><input id="to-name" type="text" placeholder="e.g. 6&quot; Concrete Curb" /></div>
+      <div class="prop-row"><label for="to-trade">Trade / Category</label><input id="to-trade" type="text" value="Sitework" /></div>
+      <div class="prop-row">
+        <label for="to-tool">Measure Type</label>
+        <select id="to-tool">
+          <option value="area">Area (SF / m²)</option>
+          <option value="perimeter">Perimeter (LF / m)</option>
+          <option value="distance">Distance (LF / m)</option>
+          <option value="count">Count (EA)</option>
+        </select>
+      </div>
+      <div class="prop-row"><label for="to-depth">Depth / Height (optional)</label><input id="to-depth" type="number" step="any" min="0" value="0" /></div>
+      <div class="prop-row"><label for="to-cost">Unit Cost ($)</label><input id="to-cost" type="number" step="any" min="0" value="0" /></div>
+      <div class="prop-row"><label for="to-color">Color</label><input id="to-color" type="color" value="#90472D" /></div>
+      <div class="modal-actions">
+        <button id="to-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="to-save" class="btn btn-primary">Add Item</button>
+      </div>
     </div>
   </div>
 

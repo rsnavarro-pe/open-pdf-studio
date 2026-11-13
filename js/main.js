@@ -14,6 +14,7 @@ import { exportAnnotatedPdf, exportTakeoffCsv } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { initPdfTools } from './tools-ui.js';
 import { initContextMenu } from './context-menu.js';
+import { initTakeoffState, addTakeoffItem, exportBoqCsv } from './takeoff.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
 
@@ -31,6 +32,7 @@ function init() {
   bindKeyboardShortcuts();
   initPdfTools();
   initContextMenu();
+  bindTakeoffEvents();
   notify();
 }
 
@@ -204,8 +206,60 @@ function bindCalibrationModal() {
   });
 }
 
+function bindTakeoffEvents() {
+  initTakeoffState();
+  const sel = document.getElementById('takeoff-item-select');
+  const refreshSelect = () => {
+    sel.innerHTML = '<option value="">-- General Measurement --</option>';
+    for (const item of state.takeoffItems) {
+      const opt = document.createElement('option');
+      opt.value = item.id;
+      opt.textContent = `${item.name} (${item.tool})`;
+      sel.appendChild(opt);
+    }
+    sel.value = state.activeTakeoffId || '';
+  };
+  refreshSelect();
+
+  sel.addEventListener('change', () => {
+    state.activeTakeoffId = sel.value;
+    const item = state.takeoffItems.find((x) => x.id === sel.value);
+    if (item) {
+      state.strokeColor = item.color;
+      document.getElementById('prop-color').value = item.color;
+      setTool(item.tool);
+    }
+  });
+
+  document.getElementById('btn-export-boq').addEventListener('click', exportBoqCsv);
+
+  const modal = document.getElementById('takeoff-modal');
+  document.getElementById('btn-add-takeoff-item').addEventListener('click', () => {
+    document.getElementById('to-name').value = '';
+    modal.classList.remove('hidden');
+    document.getElementById('to-name').focus();
+  });
+  document.getElementById('to-cancel').addEventListener('click', () => modal.classList.add('hidden'));
+  document.getElementById('to-save').addEventListener('click', () => {
+    const name = document.getElementById('to-name').value.trim();
+    if (!name) return;
+    const created = addTakeoffItem({
+      name,
+      trade: document.getElementById('to-trade').value.trim() || 'General',
+      tool: document.getElementById('to-tool').value,
+      depth: Number(document.getElementById('to-depth').value) || 0,
+      unitCost: Number(document.getElementById('to-cost').value) || 0,
+      color: document.getElementById('to-color').value || '#90472D',
+    });
+    refreshSelect();
+    document.getElementById('prop-color').value = created.color;
+    modal.classList.add('hidden');
+    setTool(created.tool);
+  });
+}
+
 function bindKeyboardShortcuts() {
-  const map = { v: 'select', h: 'pan', m: 'distance', p: 'perimeter', a: 'area', c: 'cloud', l: 'callout', t: 'text' };
+  const map = { v: 'select', h: 'pan', m: 'distance', p: 'perimeter', a: 'area', k: 'count', c: 'cloud', l: 'callout', t: 'text' };
   window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
