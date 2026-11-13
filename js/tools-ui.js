@@ -9,6 +9,7 @@ import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { dxfTextToPdfBytes } from './dxf-to-pdf.js';
 import { dwgBytesToPdfBytes } from './dwg-to-pdf.js';
 import { loadPdfA } from './pdf-engine.js';
+import { applyBatesAndWatermark } from './page-org.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -163,6 +164,23 @@ export function initPdfTools() {
       await loadPdfA(bytes.buffer, outName);
       setStatus(`Converted ${f.name} to ${outName} and opened in studio.`);
     });
+    e.target.value = '';
+  });
+
+  // Bates & Watermark
+  const runBates = (buf, name) => runSafe(setStatus, () => applyBatesAndWatermark(buf, name, {
+    watermark: document.getElementById('tool-wm-text').value,
+    batesPrefix: document.getElementById('tool-bates-prefix').value,
+    batesStart: document.getElementById('tool-bates-start').value,
+    useBates: Boolean(document.getElementById('tool-bates-prefix').value.trim() || !document.getElementById('tool-wm-text').value.trim()),
+  }, setStatus));
+  document.getElementById('tool-bates-current').addEventListener('click', () => {
+    if (!requireOpenPdf(setStatus)) return;
+    runBates(state.pdfBytes.buffer, state.pdfName);
+  });
+  document.getElementById('tool-bates-input').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (f) await runBates(await f.arrayBuffer(), f.name);
     e.target.value = '';
   });
 }

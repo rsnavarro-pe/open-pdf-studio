@@ -422,6 +422,22 @@
           <label class="btn btn-primary btn-sm" for="tool-dxf2pdf-input">Select .dwg or .dxf</label>
           <input id="tool-dxf2pdf-input" type="file" accept=".dwg,.dxf" hidden />
         </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">STAMP &amp; NUMBER</div>
+          <h4>Bates &amp; Watermark</h4>
+          <p>Add diagonal watermark and/or sequential Bates numbers to all pages.</p>
+          <input id="tool-wm-text" type="text" placeholder="Watermark (e.g. PRELIMINARY)" />
+          <div class="tool-actions">
+            <input id="tool-bates-prefix" type="text" placeholder="Prefix (e.g. RSN-)" style="flex:1" />
+            <input id="tool-bates-start" type="number" min="1" value="1" style="width:64px" title="Start #" />
+          </div>
+          <div class="tool-actions">
+            <button id="tool-bates-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-bates-input">Pick File</label>
+            <input id="tool-bates-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>

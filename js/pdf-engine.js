@@ -3,6 +3,7 @@
  */
 import { state, clearDocumentState, notify } from './state.js';
 import { extractPageSnapPoints } from './osnap.js';
+import { transformPdfPages } from './page-org.js';
 
 const WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
@@ -24,6 +25,19 @@ export async function loadPdfA(arrayBuffer, fileName) {
   pdfDocA = await loadingTask.promise;
   snapCache = new Map();
   clearDocumentState(new Uint8Array(arrayBuffer), fileName, pdfDocA.numPages);
+  await renderCurrentPage();
+  await renderAllThumbnails();
+}
+
+export async function reloadPdfPreserving(arrayBuffer, fileName, meta) {
+  await loadPdfA(arrayBuffer, fileName);
+  state.markups = meta.markups || [];
+  state.unitsPerPt = meta.unitsPerPt ?? null;
+  state.scaleLabel = meta.scaleLabel || 'Not Set';
+  state.unit = meta.unit || state.unit;
+  if (meta.takeoffItems) state.takeoffItems = meta.takeoffItems;
+  state.activeTakeoffId = meta.activeTakeoffId || '';
+  state.currentPage = Math.max(1, Math.min(meta.targetPage || 1, state.numPages));
   await renderCurrentPage();
   await renderAllThumbnails();
 }
@@ -114,8 +128,30 @@ export async function renderAllThumbnails() {
     label.className = 'thumb-label';
     label.textContent = `Page ${p}`;
 
+    const actions = document.createElement('div');
+    actions.className = 'thumb-actions';
+    const btns = [
+      { text: '↑', title: 'Move Up', act: 'up', dis: p === 1 },
+      { text: '↓', title: 'Move Down', act: 'down', dis: p === pdfDocA.numPages },
+      { text: 'Dup', title: 'Duplicate Page', act: 'dup', dis: false },
+      { text: 'Del', title: 'Delete Page', act: 'delete', dis: pdfDocA.numPages <= 1 },
+    ];
+    for (const b of btns) {
+      const btn = document.createElement('button');
+      btn.className = 'thumb-btn';
+      btn.textContent = b.text;
+      btn.title = b.title;
+      btn.disabled = b.dis;
+      btn.addEventListener('click', async (ev) => {
+        ev.stopPropagation();
+        await transformPdfPages(b.act, p, reloadPdfPreserving);
+      });
+      actions.appendChild(btn);
+    }
+
     item.appendChild(canvas);
     item.appendChild(label);
+    item.appendChild(actions);
     item.addEventListener('click', async () => {
       state.currentPage = p;
       await renderCurrentPage();
