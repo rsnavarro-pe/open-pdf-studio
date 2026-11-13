@@ -87,6 +87,8 @@
         </div>
         <div class="tool-sep"></div>
         <div class="tool-group">
+          <button id="btn-osnap" class="btn-icon active" title="Toggle CAD Object Snap (endpoints/corners)">OSNAP</button>
+          <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>Find</button>
           <button id="btn-compare-toggle" class="btn btn-compare" title="Compare Two PDF Revisions">Compare Revs</button>
         </div>
       </nav>
@@ -114,6 +116,14 @@
 
       <!-- Center Viewport -->
       <section class="viewport-area">
+        <!-- Search Bar (Ctrl+F) -->
+        <div id="search-bar" class="search-bar hidden">
+          <input id="search-input" type="text" placeholder="Search text in PDF..." />
+          <span id="search-status" class="mono">0 / 0</span>
+          <button id="search-prev" class="btn-icon btn-sm" title="Previous Match">&lt;</button>
+          <button id="search-next" class="btn-icon btn-sm" title="Next Match">&gt;</button>
+          <button id="search-close" class="btn-icon btn-sm" title="Close">✕</button>
+        </div>
         <!-- Revision Comparison Bar (hidden unless comparing) -->
         <div id="compare-bar" class="compare-bar hidden">
           <div class="compare-controls">

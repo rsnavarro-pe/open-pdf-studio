@@ -5,6 +5,8 @@ import { state, addMarkup, setTool, notify } from './state.js';
 import { buildStampPayload } from './stamps.js';
 import { drawStampSvg } from './stamp-renderer.js';
 import { nextCountNumber } from './takeoff.js';
+import { findNearestSnap } from './osnap.js';
+import { renderCurrentPage } from './pdf-engine.js';
 import {
   screenToPdf, pdfToScreen, distPt, polylineLength,
   polygonPerimeter, polygonArea, formatLength, formatArea,
@@ -17,6 +19,7 @@ let scrollerEl = null;
 let draft = null; // { type, points, isDragging }
 let panStart = null;
 let onCalibrateCallback = null;
+let activeSnapPt = null;
 
 export function initOverlay(onCalibrate) {
   svgEl = document.getElementById('overlay-svg');
@@ -28,6 +31,7 @@ export function initOverlay(onCalibrate) {
   svgEl.addEventListener('pointerup', onPointerUp);
   svgEl.addEventListener('dblclick', onDoubleClick);
   svgEl.addEventListener('contextmenu', onRightClickFinish);
+  scrollerEl.addEventListener('wheel', onWheelZoom, { passive: false });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (draft) {
@@ -44,11 +48,18 @@ export function isDraftingMulti() {
   return Boolean(draft && draft.multi);
 }
 
-function getPdfPointFromEvent(e) {
+function getPdfPointFromEvent(e, applySnap = true) {
   const rect = svgEl.getBoundingClientRect();
   const px = e.clientX - rect.left;
   const py = e.clientY - rect.top;
-  return screenToPdf(px, py, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
+  const raw = screenToPdf(px, py, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
+  if (applySnap && state.osnap && !['select', 'pan'].includes(state.activeTool)) {
+    const res = findNearestSnap(raw, state.snapPoints, 10 / state.zoom);
+    activeSnapPt = res.snapped ? res.pt : null;
+    return res.pt;
+  }
+  activeSnapPt = null;
+  return raw;
 }
 
 function toScreen(pt) {
@@ -56,14 +67,17 @@ function toScreen(pt) {
 }
 
 function onPointerDown(e) {
-  if (!state.pdfBytes || e.button !== 0) return;
-  const tool = state.activeTool;
+  if (!state.pdfBytes) return;
 
-  if (tool === 'pan') {
+  // Middle-click pan (e.button === 1) or Pan tool left-click
+  if (e.button === 1 || (e.button === 0 && state.activeTool === 'pan')) {
+    e.preventDefault();
     panStart = { x: e.clientX, y: e.clientY, left: scrollerEl.scrollLeft, top: scrollerEl.scrollTop };
     svgEl.setPointerCapture(e.pointerId);
     return;
   }
+  if (e.button !== 0) return;
+  const tool = state.activeTool;
 
   const pt = getPdfPointFromEvent(e);
 
@@ -156,9 +170,31 @@ function onPointerMove(e) {
     coordsEl.textContent = `${(pt.x * factor).toFixed(1)}, ${(pt.y * factor).toFixed(1)} ${suffix}`;
   }
 
-  if (!draft) return;
+  if (!draft) {
+    if (state.osnap) renderOverlay();
+    return;
+  }
   draft.points[draft.points.length - 1] = pt;
   renderOverlay();
+}
+
+async function onWheelZoom(e) {
+  if (!state.pdfBytes || !(e.ctrlKey || e.metaKey)) return;
+  e.preventDefault();
+  const prevZoom = state.zoom;
+  const step = e.deltaY < 0 ? 0.15 : -0.15;
+  const nextZoom = Math.max(0.25, Math.min(4, +(prevZoom + step).toFixed(2)));
+  if (nextZoom === prevZoom) return;
+
+  const rect = scrollerEl.getBoundingClientRect();
+  const cx = e.clientX - rect.left + scrollerEl.scrollLeft;
+  const cy = e.clientY - rect.top + scrollerEl.scrollTop;
+  const ratio = nextZoom / prevZoom;
+
+  state.zoom = nextZoom;
+  await renderCurrentPage();
+  scrollerEl.scrollLeft = cx * ratio - (e.clientX - rect.left);
+  scrollerEl.scrollTop = cy * ratio - (e.clientY - rect.top);
 }
 
 function onPointerUp(e) {
@@ -258,6 +294,13 @@ export function renderOverlay() {
       color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor,
       lineWidth: state.lineWidth,
     }, false, true);
+  }
+  if (activeSnapPt && state.osnap) {
+    const sp = toScreen(activeSnapPt);
+    svgEl.appendChild(createSvg('rect', {
+      x: sp.x - 5, y: sp.y - 5, width: 10, height: 10,
+      fill: 'none', stroke: '#90472D', 'stroke-width': 2,
+    }));
   }
 }
 

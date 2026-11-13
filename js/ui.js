@@ -41,6 +41,8 @@ export function renderUI() {
   document.getElementById('btn-export-dxf').disabled = !hasDoc;
   document.getElementById('btn-export-csv').disabled = !hasDoc || state.markups.length === 0;
   document.getElementById('btn-export-boq').disabled = !hasDoc || state.markups.length === 0;
+  document.getElementById('btn-find').disabled = !hasDoc;
+  document.getElementById('btn-osnap').classList.toggle('active', state.osnap);
   document.getElementById('btn-undo').disabled = state.undoStack.length === 0;
   document.getElementById('btn-redo').disabled = state.redoStack.length === 0;
   document.getElementById('btn-delete-selected').disabled = !state.selectedId;

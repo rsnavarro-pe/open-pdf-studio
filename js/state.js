@@ -11,8 +11,10 @@ export const state = {
   pageWidthPt: 0,
   pageHeightPt: 0,
 
-  activeTool: 'select', // select | pan | calibrate | distance | perimeter | area | cloud | callout | arrow | rect | text | stamp
+  activeTool: 'select', // select | pan | calibrate | distance | perimeter | area | count | cloud | callout | arrow | rect | text | stamp
   selectedId: null,
+  osnap: true,
+  snapPoints: [],
 
   // Style defaults
   strokeColor: '#c0392b',

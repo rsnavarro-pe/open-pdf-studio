@@ -14,6 +14,7 @@ import { exportAnnotatedPdf, exportTakeoffCsv } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { initPdfTools } from './tools-ui.js';
 import { initContextMenu } from './context-menu.js';
+import { initSearch } from './search.js';
 import { initTakeoffState, addTakeoffItem, exportBoqCsv } from './takeoff.js';
 import { EMBEDDED_STAMPS } from './stamps.js';
 import { renderUI } from './ui.js';
@@ -32,7 +33,12 @@ function init() {
   bindKeyboardShortcuts();
   initPdfTools();
   initContextMenu();
+  initSearch();
   bindTakeoffEvents();
+  document.getElementById('btn-osnap').addEventListener('click', () => {
+    state.osnap = !state.osnap;
+    notify();
+  });
   notify();
 }
 

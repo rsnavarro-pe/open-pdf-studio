@@ -2,12 +2,14 @@
  * PDF.js wrapper for loading, rendering pages, and generating thumbnails.
  */
 import { state, clearDocumentState, notify } from './state.js';
+import { extractPageSnapPoints } from './osnap.js';
 
 const WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
 let pdfDocA = null;
 let pdfDocB = null;
 let activeRenderTask = null;
+let snapCache = new Map();
 
 export function initPdfEngine() {
   if (window.pdfjsLib) {
@@ -20,6 +22,7 @@ export async function loadPdfA(arrayBuffer, fileName) {
   const copy = new Uint8Array(arrayBuffer).slice();
   const loadingTask = window.pdfjsLib.getDocument({ data: copy });
   pdfDocA = await loadingTask.promise;
+  snapCache = new Map();
   clearDocumentState(new Uint8Array(arrayBuffer), fileName, pdfDocA.numPages);
   await renderCurrentPage();
   await renderAllThumbnails();
@@ -74,6 +77,10 @@ export async function renderCurrentPage() {
   } catch (err) {
     if (err?.name !== 'RenderingCancelledException') console.error(err);
   }
+  if (!snapCache.has(state.currentPage) && window.pdfjsLib?.OPS) {
+    snapCache.set(state.currentPage, await extractPageSnapPoints(page, window.pdfjsLib.OPS));
+  }
+  state.snapPoints = snapCache.get(state.currentPage) || [];
   notify();
 }
 
