@@ -2,7 +2,7 @@
  * UI bindings for the PDF Tools modal (Organize, Optimize, Convert).
  */
 import { state } from './state.js';
-import { mergePdfs, splitPdf, compressPdf, imagesToPdf, triggerDownload } from './pdf-tools-org.js';
+import { mergePdfs, splitPdf, compressPdf, imagesToPdf, triggerDownload, formatBytes } from './pdf-tools-org.js';
 import { pdfToImages, pdfToPptx, pdfToDocx } from './pdf-tools-export.js';
 import { runOcrPdf } from './pdf-tools-ocr.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
@@ -73,14 +73,40 @@ export function initPdfTools() {
   });
 
   // Compress PDF
+  const presetEl = document.getElementById('tool-compress-preset');
   const qSlider = document.getElementById('tool-compress-quality');
-  qSlider.addEventListener('input', () => {
-    document.getElementById('compress-q-val').textContent = `${qSlider.value}%`;
+  const sizeInfoEl = document.getElementById('compress-size-info');
+  const presetMap = { low: 45, medium: 70, high: 88 };
+
+  const updateCompressInfo = () => {
+    const q = Number(qSlider.value);
+    document.getElementById('compress-q-val').textContent = `${q}%`;
+    const bytes = state.pdfBytes?.byteLength;
+    if (!bytes) {
+      sizeInfoEl.textContent = 'No open PDF — pick a file to compress.';
+      return;
+    }
+    const estFactor = Math.min(0.95, 0.16 + ((q - 30) / 65) * 0.59);
+    const estBytes = Math.round(bytes * estFactor);
+    const estPct = Math.round((1 - estFactor) * 100);
+    sizeInfoEl.textContent = `Current: ${formatBytes(bytes)} → Est. ~${formatBytes(estBytes)} (−${estPct}%)`;
+  };
+
+  document.getElementById('btn-pdf-tools').addEventListener('click', updateCompressInfo);
+  presetEl.addEventListener('change', () => {
+    if (presetMap[presetEl.value] != null) qSlider.value = String(presetMap[presetEl.value]);
+    updateCompressInfo();
   });
-  const runCompress = (buf, name) => runSafe(
-    setStatus,
-    () => compressPdf(buf, name, Number(qSlider.value), setStatus),
-  );
+  qSlider.addEventListener('input', () => {
+    const q = Number(qSlider.value);
+    const match = Object.entries(presetMap).find(([, v]) => v === q);
+    presetEl.value = match ? match[0] : 'custom';
+    updateCompressInfo();
+  });
+  const runCompress = (buf, name) => runSafe(setStatus, async () => {
+    const res = await compressPdf(buf, name, Number(qSlider.value), setStatus);
+    if (res?.summary) sizeInfoEl.textContent = `Saved: ${res.summary}`;
+  });
   document.getElementById('tool-compress-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
     runCompress(state.pdfBytes.buffer, state.pdfName);

@@ -346,9 +346,16 @@
         <div class="tool-card">
           <div class="tool-cat">OPTIMIZE PDF</div>
           <h4>Compress PDF</h4>
-          <p>Reduce file size by re-encoding pages at target quality.</p>
-          <label class="range-label">Quality: <span id="compress-q-val" class="mono">75%</span>
-            <input id="tool-compress-quality" type="range" min="30" max="95" value="75" />
+          <p>Re-encode pages at Low, Medium, High, or custom quality.</p>
+          <div id="compress-size-info" class="mono" style="font-size:11px;color:var(--accent-dark);">Current: —</div>
+          <select id="tool-compress-preset">
+            <option value="low">Low Quality (Smallest File)</option>
+            <option value="medium" selected>Medium Quality (Balanced)</option>
+            <option value="high">High Quality (Crisp)</option>
+            <option value="custom">Custom Quality</option>
+          </select>
+          <label class="range-label">Quality: <span id="compress-q-val" class="mono">70%</span>
+            <input id="tool-compress-quality" type="range" min="30" max="95" value="70" />
           </label>
           <div class="tool-actions">
             <button id="tool-compress-current" class="btn btn-primary btn-sm">Use Open PDF</button>

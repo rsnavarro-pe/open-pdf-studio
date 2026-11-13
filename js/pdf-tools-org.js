@@ -121,12 +121,18 @@ export async function splitPdf(arrayBuffer, baseName, options, onStatus) {
   return exportChunks(chunks, `${cleanName}_split_pages`, onStatus, triggerDownload);
 }
 
+export function formatBytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 KB';
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+}
+
 export async function compressPdf(arrayBuffer, baseName, qualityPercent, onStatus) {
   const { PDFDocument } = window.PDFLib;
   const pdfJsDoc = await window.pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer).slice() }).promise;
   const outDoc = await PDFDocument.create();
   const quality = Math.max(0.3, Math.min(0.95, qualityPercent / 100));
-  const scale = quality < 0.6 ? 1.2 : 1.5;
+  const scale = quality <= 0.5 ? 1.0 : (quality <= 0.78 ? 1.35 : 1.7);
 
   for (let p = 1; p <= pdfJsDoc.numPages; p++) {
     onStatus(`Compressing page ${p} / ${pdfJsDoc.numPages} (${qualityPercent}% quality)...`);
@@ -146,10 +152,13 @@ export async function compressPdf(arrayBuffer, baseName, qualityPercent, onStatu
   }
 
   const outBytes = await outDoc.save({ useObjectStreams: true });
-  const ratio = ((1 - outBytes.byteLength / arrayBuffer.byteLength) * 100).toFixed(1);
+  const origBytes = arrayBuffer.byteLength;
+  const savedPct = ((1 - outBytes.byteLength / origBytes) * 100).toFixed(1);
   const cleanName = baseName.replace(/\.pdf$/i, '');
   triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), `${cleanName}_compressed.pdf`);
-  onStatus(`Compressed PDF saved (${ratio}% size change, ${(outBytes.byteLength / 1024).toFixed(0)} KB).`);
+  const summary = `${formatBytes(origBytes)} → ${formatBytes(outBytes.byteLength)} (${savedPct}% reduced)`;
+  onStatus(`Compressed PDF saved: ${summary}.`);
+  return { origBytes, outBytes: outBytes.byteLength, savedPct, summary };
 }
 
 export async function imagesToPdf(files, onStatus) {
