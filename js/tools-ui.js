@@ -4,6 +4,7 @@
 import { state } from './state.js';
 import { mergePdfs, splitPdf, compressPdf, imagesToPdf } from './pdf-tools-org.js';
 import { pdfToImages, pdfToPptx, pdfToDocx } from './pdf-tools-export.js';
+import { runOcrPdf } from './pdf-tools-ocr.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -96,6 +97,29 @@ export function initPdfTools() {
   document.getElementById('tool-pdf2office-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
     if (f) await runOffice(await f.arrayBuffer(), f.name);
+    e.target.value = '';
+  });
+
+  // OCR PDF
+  const ocrPreview = document.getElementById('ocr-preview');
+  const runOcr = (buf, name) => {
+    const mode = document.getElementById('tool-ocr-mode').value;
+    ocrPreview.classList.add('hidden');
+    return runSafe(setStatus, async () => {
+      const text = await runOcrPdf(buf, name, mode, setStatus);
+      if (text) {
+        ocrPreview.value = text;
+        ocrPreview.classList.remove('hidden');
+      }
+    });
+  };
+  document.getElementById('tool-ocr-current').addEventListener('click', () => {
+    if (!requireOpenPdf(setStatus)) return;
+    runOcr(state.pdfBytes.buffer, state.pdfName);
+  });
+  document.getElementById('tool-ocr-input').addEventListener('change', async (e) => {
+    const f = e.target.files?.[0];
+    if (f) await runOcr(await f.arrayBuffer(), f.name);
     e.target.value = '';
   });
 }

@@ -16,7 +16,7 @@ const TOOL_HINTS = {
   distance: 'Click and drag to measure a straight-line distance.',
   perimeter: 'Click points to trace a polyline; double-click to finish.',
   area: 'Click polygon vertices; double-click to close and compute area.',
-  cloud: 'Click and drag to draw an AEC revision cloud.',
+  cloud: 'Click and drag to draw a revision cloud.',
   callout: 'Click and drag from label origin to target arrow.',
   arrow: 'Click and drag to draw a leader arrow.',
   rect: 'Click and drag to draw a rectangle.',

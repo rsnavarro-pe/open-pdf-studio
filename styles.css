@@ -58,14 +58,11 @@ body {
 
 .brand-title h1 { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
 
-.brand-badge {
-  background: var(--accent-primary);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 3px;
-  letter-spacing: 0.6px;
+.brand-logo {
+  width: 28px;
+  height: 28px;
+  display: block;
+  flex-shrink: 0;
 }
 
 .file-actions { display: flex; gap: 6px; align-items: center; }

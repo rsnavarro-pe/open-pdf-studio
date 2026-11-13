@@ -3,16 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Open PDF Studio — Browser AEC Edition</title>
+  <title>RSN PDF Studio</title>
+  <link rel="icon" type="image/svg+xml" href="assets/rsn-logo.svg" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="tools.css" />
-  <!-- PDF.js, pdf-lib & Client-Side Conversion Libraries (zero-build CDN) -->
+  <!-- PDF.js, pdf-lib, Tesseract OCR & Client-Side Conversion Libraries (zero-build CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
 <body>
   <div id="app" class="studio-shell">
@@ -20,8 +22,8 @@
     <header class="studio-header">
       <div class="brand-bar">
         <div class="brand-title">
-          <span class="brand-badge">AEC</span>
-          <h1>Open PDF Studio</h1>
+          <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="brand-logo" />
+          <h1>RSN PDF Studio</h1>
         </div>
         <div class="file-actions">
           <label class="btn btn-primary" for="pdf-file-input">Open PDF</label>
@@ -132,7 +134,7 @@
         <div id="canvas-scroller" class="canvas-scroller">
           <div id="drop-zone" class="drop-zone">
             <div class="drop-card">
-              <h2>Open PDF Studio</h2>
+              <h2>RSN PDF Studio</h2>
               <p>Drop a PDF blueprint or drawing here, or click <strong>Open PDF</strong> / <strong>Sample Plan</strong> above.</p>
             </div>
           </div>
@@ -339,7 +341,25 @@
             <input id="tool-pdf2office-input" type="file" accept="application/pdf" hidden />
           </div>
         </div>
+
+        <!-- OCR -->
+        <div class="tool-card">
+          <div class="tool-cat">OCR &amp; TEXT</div>
+          <h4>OCR PDF (English)</h4>
+          <p>Recognize scanned text into a searchable PDF or .txt file.</p>
+          <select id="tool-ocr-mode">
+            <option value="pdf">Searchable PDF (.pdf)</option>
+            <option value="txt">Extract Text (.txt)</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-ocr-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-ocr-input">Pick File</label>
+            <input id="tool-ocr-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
       </div>
+
+      <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>
     </div>
   </div>
 
