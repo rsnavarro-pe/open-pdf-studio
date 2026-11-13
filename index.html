@@ -54,53 +54,61 @@
       </div>
 
       <nav class="tool-ribbon" aria-label="Studio Tools">
-        <div class="tool-group">
-          <button class="tool-btn active" data-tool="select" title="Select / Inspect (V)">Select</button>
-          <button class="tool-btn" data-tool="pan" title="Pan Canvas (H)">Pan</button>
+        <div class="ribbon-pod">
+          <span class="pod-label">NAV</span>
+          <div class="tool-group">
+            <button class="tool-btn active" data-tool="select" title="Select / Inspect (V)">↖ Select</button>
+            <button class="tool-btn" data-tool="pan" title="Pan Canvas (H)">✥ Pan</button>
+          </div>
         </div>
-        <div class="tool-sep"></div>
-        <div class="tool-group">
-          <button class="tool-btn" data-tool="calibrate" title="Calibrate Scale from Known Distance">Calibrate</button>
-          <button class="tool-btn" data-tool="distance" title="Measure Distance (M)">Distance</button>
-          <button class="tool-btn" data-tool="perimeter" title="Measure Perimeter (P)">Perimeter</button>
-          <button class="tool-btn" data-tool="area" title="Measure Area (A)">Area</button>
-          <button class="tool-btn" data-tool="cutout" title="Area Cutout / Deduction">Cutout</button>
-          <button class="tool-btn" data-tool="count" title="Count Items (K)">Count</button>
+        <div class="ribbon-pod">
+          <span class="pod-label">MEASURE &amp; TAKEOFF</span>
+          <div class="tool-group">
+            <button class="tool-btn" data-tool="calibrate" title="Calibrate Scale from Known Distance">⌖ Calibrate</button>
+            <button class="tool-btn" data-tool="distance" title="Measure Distance (M)">↔ Distance</button>
+            <button class="tool-btn" data-tool="perimeter" title="Measure Perimeter (P)">⌇ Perimeter</button>
+            <button class="tool-btn" data-tool="area" title="Measure Area (A)">⬠ Area</button>
+            <button class="tool-btn" data-tool="cutout" title="Area Cutout / Deduction">◪ Cutout</button>
+            <button class="tool-btn" data-tool="count" title="Count Items (K)"># Count</button>
+          </div>
         </div>
-        <div class="tool-sep"></div>
-        <div class="tool-group">
-          <button class="tool-btn" data-tool="cloud" title="Revision Cloud (C)">Cloud</button>
-          <button class="tool-btn" data-tool="callout" title="Callout Leader (L)">Callout</button>
-          <button class="tool-btn" data-tool="arrow" title="Arrow">Arrow</button>
-          <button class="tool-btn" data-tool="rect" title="Rectangle">Rect</button>
-          <button class="tool-btn" data-tool="pen" title="Freehand Pen">Pen</button>
-          <button class="tool-btn" data-tool="highlight" title="Highlighter">Highlight</button>
-          <button class="tool-btn" data-tool="underline" title="Underline Text">Underline</button>
-          <button class="tool-btn" data-tool="strike" title="Strikethrough Text">Strike</button>
-          <button class="tool-btn" data-tool="note" title="Sticky Note Comment (N)">Note</button>
-          <button class="tool-btn" data-tool="redact" title="Blackout Redaction Box">Redact</button>
-          <button id="btn-sign-tool" class="tool-btn" data-tool="sign" title="Electronic Signature or Image Stamp">Sign / Img</button>
-          <button class="tool-btn" data-tool="text" title="Text Note (T)">Text</button>
-          <button class="tool-btn" data-tool="stamp" title="Engineering Stamp">Stamp</button>
+        <div class="ribbon-pod">
+          <span class="pod-label">MARKUP &amp; NOTES</span>
+          <div class="tool-group">
+            <button class="tool-btn" data-tool="cloud" title="Revision Cloud (C)">☁ Cloud</button>
+            <button class="tool-btn" data-tool="callout" title="Callout Leader (L)">💬 Callout</button>
+            <button class="tool-btn" data-tool="arrow" title="Arrow">↗ Arrow</button>
+            <button class="tool-btn" data-tool="rect" title="Rectangle">▭ Rect</button>
+            <button class="tool-btn" data-tool="pen" title="Freehand Pen">✎ Pen</button>
+            <button class="tool-btn" data-tool="highlight" title="Highlighter">🖍 Highlight</button>
+            <button class="tool-btn" data-tool="underline" title="Underline Text"><u>U</u> Line</button>
+            <button class="tool-btn" data-tool="strike" title="Strikethrough Text"><s>S</s> Strike</button>
+            <button class="tool-btn" data-tool="note" title="Sticky Note Comment (N)">📌 Note</button>
+            <button class="tool-btn" data-tool="text" title="Text Note (T)">T Text</button>
+          </div>
         </div>
-        <div class="tool-sep"></div>
-        <div class="tool-group">
-          <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" disabled>Undo</button>
-          <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" disabled>Redo</button>
-          <button id="btn-delete-selected" class="btn-icon" title="Delete Selected (Del)" disabled>Delete</button>
+        <div class="ribbon-pod">
+          <span class="pod-label">SIGN &amp; STAMP</span>
+          <div class="tool-group">
+            <button id="btn-sign-tool" class="tool-btn" data-tool="sign" title="Electronic Signature or Image Stamp">✒ Sign / Img</button>
+            <button class="tool-btn" data-tool="stamp" title="Engineering Stamp">✪ Stamp</button>
+            <button class="tool-btn" data-tool="redact" title="Blackout Redaction Box">⬛ Redact</button>
+          </div>
         </div>
-        <div class="tool-sep"></div>
-        <div class="tool-group">
-          <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">-</button>
-          <button id="btn-zoom-fit" class="btn-icon" title="Fit Width">Fit</button>
-          <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
-          <button id="btn-rotate" class="btn-icon" title="Rotate 90°">Rot 90°</button>
-        </div>
-        <div class="tool-sep"></div>
-        <div class="tool-group">
-          <button id="btn-osnap" class="btn-icon active" title="Toggle CAD Object Snap (endpoints/corners)">OSNAP</button>
-          <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>Find</button>
-          <button id="btn-compare-toggle" class="btn btn-compare" title="Compare Two PDF Revisions">Compare Revs</button>
+        <div class="ribbon-pod">
+          <span class="pod-label">EDIT &amp; VIEW</span>
+          <div class="tool-group">
+            <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+            <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+            <button id="btn-delete-selected" class="btn-icon" title="Delete Selected (Del)" disabled>✕ Del</button>
+            <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">−</button>
+            <button id="btn-zoom-fit" class="btn-icon" title="Fit Width">Fit</button>
+            <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
+            <button id="btn-rotate" class="btn-icon" title="Rotate 90°">↻ 90°</button>
+            <button id="btn-osnap" class="btn-icon active" title="Toggle CAD Object Snap (endpoints/corners)">OSNAP</button>
+            <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>⌕ Find</button>
+            <button id="btn-compare-toggle" class="btn btn-compare" title="Compare Two PDF Revisions">⇄ Compare</button>
+          </div>
         </div>
       </nav>
     </header>
@@ -163,9 +171,37 @@
         <div id="canvas-scroller" class="canvas-scroller">
           <div id="drop-zone" class="drop-zone">
             <div class="drop-card">
+              <div class="launchpad-eyebrow">100% CLIENT-SIDE AEC &amp; PDF WORKBENCH</div>
               <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="drop-logo" />
               <h2>RSN PDF Studio</h2>
-              <p>Drop a PDF document or drawing here, or click <strong>Open PDF</strong> / <strong>Sample Plan</strong> above.</p>
+              <p>Drop a PDF or CAD drawing anywhere here, or launch a workspace below.</p>
+              <div class="launchpad-cta">
+                <label class="btn btn-primary" for="pdf-file-input">Open PDF Drawing</label>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('btn-load-sample').click()">Load Sample Floor Plan</button>
+                <button type="button" class="btn btn-secondary" data-open-hub="all">Explore 16+ PDF Tools</button>
+              </div>
+              <div class="launchpad-tiles">
+                <button type="button" class="launch-tile" data-open-hub="ORGANIZE">
+                  <span class="tile-tag">ORGANIZE</span>
+                  <strong>Merge, Split &amp; Reorder</strong>
+                  <span>By pages, size, interleave, or N-Up</span>
+                </button>
+                <button type="button" class="launch-tile" data-open-hub="OPTIMIZE">
+                  <span class="tile-tag">OPTIMIZE</span>
+                  <strong>Compress &amp; Grayscale</strong>
+                  <span>Low/Med/High presets with size estimate</span>
+                </button>
+                <button type="button" class="launch-tile" data-open-hub="CAD">
+                  <span class="tile-tag">CAD &amp; DATA</span>
+                  <strong>DWG / DXF ↔ PDF &amp; CSV</strong>
+                  <span>Bidirectional CAD &amp; table extraction</span>
+                </button>
+                <button type="button" class="launch-tile" data-open-hub="SECURITY">
+                  <span class="tile-tag">SECURITY &amp; FORMS</span>
+                  <strong>Unlock, Forms &amp; Privacy</strong>
+                  <span>Decrypt, fill AcroForms &amp; strip metadata</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -371,10 +407,24 @@
   <div id="tools-modal" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-card modal-wide">
       <div class="tools-header">
-        <h3>PDF Organize, Optimize &amp; Convert</h3>
+        <div>
+          <div class="launchpad-eyebrow" style="margin-bottom:2px">CLIENT-SIDE PDFCRAFT WORKBENCH</div>
+          <h3>PDF Organize, Optimize, Convert &amp; CAD Hub</h3>
+        </div>
         <button id="tools-close" class="btn-icon" title="Close">✕</button>
       </div>
-      <div id="tools-status" class="tools-status mono">Ready — 100% client-side processing.</div>
+      <div class="hub-toolbar">
+        <div class="hub-pills">
+          <button type="button" class="hub-filter-btn active" data-filter="all">All Tools</button>
+          <button type="button" class="hub-filter-btn" data-filter="ORGANIZE">Organize &amp; Layout</button>
+          <button type="button" class="hub-filter-btn" data-filter="OPTIMIZE">Optimize</button>
+          <button type="button" class="hub-filter-btn" data-filter="CONVERT">Convert &amp; OCR</button>
+          <button type="button" class="hub-filter-btn" data-filter="CAD">CAD &amp; Tables</button>
+          <button type="button" class="hub-filter-btn" data-filter="SECURITY">Security, Forms &amp; Stamp</button>
+        </div>
+        <input id="tools-search" type="search" class="hub-search" placeholder="Search tools (e.g. split, dxf, compress, unlock, forms)..." />
+      </div>
+      <div id="tools-status" class="tools-status mono">Ready — 100% private client-side processing.</div>
 
       <div class="tools-grid">
         <!-- Organize -->

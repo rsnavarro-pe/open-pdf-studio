@@ -133,4 +133,40 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
     if (!requireOpenPdf(setStatus)) return;
     runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.buffer, state.pdfName, formArea.value, true, setStatus));
   });
+
+  // Hub Category Filter Pills, Search & Launchpad Tiles
+  let activeCat = 'all';
+  const searchEl = document.getElementById('tools-search');
+  const catMatchers = {
+    ORGANIZE: ['ORGANIZE', 'LAYOUT', 'EDIT'],
+    OPTIMIZE: ['OPTIMIZE', 'WORKFLOW'],
+    CONVERT: ['CONVERT', 'OCR'],
+    CAD: ['CAD', 'DATA'],
+    SECURITY: ['SECURITY', 'PRIVACY', 'FORMS', 'STAMP'],
+  };
+
+  const applyHubFilter = (cat = activeCat) => {
+    activeCat = cat;
+    const q = (searchEl?.value || '').trim().toLowerCase();
+    document.querySelectorAll('.hub-filter-btn').forEach((b) => b.classList.toggle('active', b.dataset.filter === activeCat));
+    document.querySelectorAll('#tools-modal .tool-card').forEach((card) => {
+      const catTxt = (card.querySelector('.tool-cat')?.textContent || '').toUpperCase();
+      const bodyTxt = card.textContent.toLowerCase();
+      const catOk = activeCat === 'all' || (catMatchers[activeCat] || [activeCat]).some((k) => catTxt.includes(k));
+      const qOk = !q || bodyTxt.includes(q);
+      card.classList.toggle('hidden', !(catOk && qOk));
+    });
+  };
+
+  document.querySelectorAll('.hub-filter-btn').forEach((btn) => {
+    btn.addEventListener('click', () => applyHubFilter(btn.dataset.filter));
+  });
+  searchEl?.addEventListener('input', () => applyHubFilter(activeCat));
+
+  document.querySelectorAll('[data-open-hub]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      document.getElementById('btn-pdf-tools').click();
+      applyHubFilter(btn.dataset.openHub || 'all');
+    });
+  });
 }
