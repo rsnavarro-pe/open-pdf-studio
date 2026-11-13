@@ -10,6 +10,7 @@ import { dxfTextToPdfBytes } from './dxf-to-pdf.js';
 import { dwgBytesToPdfBytes } from './dwg-to-pdf.js';
 import { loadPdfA } from './pdf-engine.js';
 import { applyBatesAndWatermark } from './page-org.js';
+import { initCraftTools } from './tools-craft-ui.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -235,6 +236,8 @@ export function initPdfTools() {
     if (f) await runBates(await f.arrayBuffer(), f.name);
     e.target.value = '';
   });
+
+  initCraftTools(setStatus, runSafe, requireOpenPdf);
 }
 
 function requireOpenPdf(setStatus) {

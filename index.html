@@ -460,6 +460,96 @@
             <input id="tool-bates-input" type="file" accept="application/pdf" hidden />
           </div>
         </div>
+
+        <!-- PDFCraft-inspired Layout, Visual, Order & Metadata Tools -->
+        <div class="tool-card">
+          <div class="tool-cat">LAYOUT &amp; PRINT</div>
+          <h4>N-Up Multi-Page Sheet</h4>
+          <p>Combine 2, 4, 6, or 9 pages onto a single sheet for compact printing.</p>
+          <select id="tool-nup-count">
+            <option value="2">2-Up (2 per sheet)</option>
+            <option value="4" selected>4-Up (2×2 grid)</option>
+            <option value="6">6-Up (3×2 grid)</option>
+            <option value="9">9-Up (3×3 grid)</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-nup-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-nup-input">Pick File</label>
+            <input id="tool-nup-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">STAMP &amp; NUMBER</div>
+          <h4>Page Numbers &amp; Header</h4>
+          <p>Add formatted page numbers and an optional header across all pages.</p>
+          <div class="tool-actions">
+            <select id="tool-pagenum-pos" style="flex:1">
+              <option value="bottom-center">Bottom Center</option>
+              <option value="bottom-right">Bottom Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="top-center">Top Center</option>
+              <option value="top-right">Top Right</option>
+              <option value="top-left">Top Left</option>
+            </select>
+            <select id="tool-pagenum-fmt" style="flex:1">
+              <option value="x-of-n">Page 1 of N</option>
+              <option value="x-slash-n">1 / N</option>
+              <option value="x">1</option>
+            </select>
+          </div>
+          <input id="tool-pagenum-header" type="text" placeholder="Optional header text" />
+          <div class="tool-actions">
+            <button id="tool-pagenum-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-pagenum-input">Pick File</label>
+            <input id="tool-pagenum-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">OPTIMIZE PDF</div>
+          <h4>Grayscale / Invert / Flatten</h4>
+          <p>Convert to grayscale, invert colors (dark mode), or flatten into static pages.</p>
+          <select id="tool-visual-mode">
+            <option value="grayscale">Convert to Grayscale</option>
+            <option value="invert">Invert Colors (Dark Mode)</option>
+            <option value="flatten">Flatten to Static PDF</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-visual-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-visual-input">Pick File</label>
+            <input id="tool-visual-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">ORGANIZE PDF</div>
+          <h4>Reverse / Insert Blanks</h4>
+          <p>Reverse page order or insert a blank page after every page for notes/duplex.</p>
+          <select id="tool-order-mode">
+            <option value="reverse">Reverse Page Order</option>
+            <option value="blank-after-each">Insert Blank After Each Page</option>
+          </select>
+          <div class="tool-actions">
+            <button id="tool-order-current" class="btn btn-primary btn-sm">Use Open PDF</button>
+            <label class="btn btn-secondary btn-sm" for="tool-order-input">Pick File</label>
+            <input id="tool-order-input" type="file" accept="application/pdf" hidden />
+          </div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-cat">PRIVACY &amp; INFO</div>
+          <h4>PDF Metadata Editor</h4>
+          <p>Inspect, update, or strip PDF metadata (Title, Author, Subject, Keywords).</p>
+          <input id="tool-meta-title" type="text" placeholder="Title" />
+          <input id="tool-meta-author" type="text" placeholder="Author" />
+          <input id="tool-meta-subject" type="text" placeholder="Subject" />
+          <input id="tool-meta-keywords" type="text" placeholder="Keywords (comma-separated)" />
+          <div class="tool-actions">
+            <button id="tool-meta-save" class="btn btn-primary btn-sm">Save Metadata</button>
+            <button id="tool-meta-strip" class="btn btn-secondary btn-sm">Strip All</button>
+          </div>
+        </div>
       </div>
 
       <textarea id="ocr-preview" class="ocr-preview hidden" readonly placeholder="Extracted OCR text will appear here..."></textarea>
