@@ -23,7 +23,7 @@ export async function exportAnnotatedPdf() {
     const sw = m.lineWidth || 2;
     const toPdfY = (y) => height - y;
 
-    if (['distance', 'arrow', 'callout'].includes(m.type) && m.points.length >= 2) {
+    if (['distance', 'arrow', 'callout', 'underline', 'strike'].includes(m.type) && m.points.length >= 2) {
       const [a, b] = m.points;
       page.drawLine({
         start: { x: a.x, y: toPdfY(a.y) },

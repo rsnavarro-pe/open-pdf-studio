@@ -25,7 +25,7 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
   const stroke = isSelected ? '#0ea5e9' : (m.color || fallback);
   const sw = (m.lineWidth || 2) + (isSelected ? 1.5 : 0);
 
-  if (['distance', 'calibrate', 'arrow', 'callout'].includes(m.type)) {
+  if (['distance', 'calibrate', 'arrow', 'callout', 'underline', 'strike'].includes(m.type)) {
     const [a, b] = pts;
     const attrs = { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke, 'stroke-width': sw, 'stroke-dasharray': m.type === 'calibrate' ? '5,4' : '' };
     if (m.type === 'arrow' || m.type === 'callout') attrs['marker-end'] = 'url(#arrowhead)';

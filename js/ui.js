@@ -25,6 +25,8 @@ const TOOL_HINTS = {
   rect: 'Click and drag to draw a rectangle.',
   pen: 'Click and drag to draw freehand.',
   highlight: 'Click and drag to highlight (choose colors in Highlight / Note palette).',
+  underline: 'Click and drag across text to draw a straight underline.',
+  strike: 'Click and drag across text to draw a straight strikethrough line.',
   note: 'Click anywhere on the sheet to place a sticky note comment (double-click to edit).',
   redact: 'Click and drag a box to blackout/redact confidential content on export.',
   sign: 'Click (or click-drag to size) on the sheet to place your signature or image.',

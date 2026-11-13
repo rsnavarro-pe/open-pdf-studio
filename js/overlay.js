@@ -46,7 +46,7 @@ export function isDraftingMulti() {
 function getPdfPointFromEvent(e, applySnap = true) {
   const rect = svgEl.getBoundingClientRect();
   const raw = screenToPdf(e.clientX - rect.left, e.clientY - rect.top, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
-  if (applySnap && state.osnap && !['select', 'pan', 'pen', 'highlight', 'note'].includes(state.activeTool)) {
+  if (applySnap && state.osnap && !['select', 'pan', 'pen', 'highlight', 'underline', 'strike', 'note'].includes(state.activeTool)) {
     const res = findNearestSnap(raw, state.snapPoints, 10 / state.zoom);
     activeSnapPt = res.snapped ? res.pt : null;
     return res.pt;
@@ -163,6 +163,8 @@ function onPointerMove(e) {
   if (draft.freehand) {
     const last = draft.points[draft.points.length - 1];
     if (distPt(last, pt) >= 2 / state.zoom) draft.points.push(pt);
+  } else if (draft.type === 'underline' || draft.type === 'strike') {
+    draft.points[draft.points.length - 1] = { x: pt.x, y: draft.points[0].y };
   } else {
     draft.points[draft.points.length - 1] = pt;
   }
