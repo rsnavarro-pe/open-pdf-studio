@@ -213,7 +213,13 @@ export function createWheelZoomHandler(scrollerEl, state, renderOverlay, renderC
     else if (e.deltaMode === 2) dy *= 400;
     dy = Math.max(-90, Math.min(90, dy));
 
-    pendingWheel = { dy, clientX: e.clientX, clientY: e.clientY };
+    if (pendingWheel) {
+      pendingWheel.dy = Math.max(-120, Math.min(120, pendingWheel.dy + dy));
+      pendingWheel.clientX = e.clientX;
+      pendingWheel.clientY = e.clientY;
+    } else {
+      pendingWheel = { dy, clientX: e.clientX, clientY: e.clientY };
+    }
     if (wheelRaf) return;
 
     wheelRaf = requestAnimationFrame(() => {

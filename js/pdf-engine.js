@@ -10,6 +10,7 @@ const WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.w
 let pdfDocA = null;
 let pdfDocB = null;
 let activeRenderTask = null;
+let renderSeq = 0;
 let snapCache = new Map();
 
 export function initPdfEngine() {
@@ -67,7 +68,9 @@ export function getPdfDocB() {
 
 export async function renderCurrentPage() {
   if (!pdfDocA) return;
+  const seq = ++renderSeq;
   const page = await pdfDocA.getPage(state.currentPage);
+  if (seq !== renderSeq) return;
   const unrotated = page.getViewport({ scale: 1, rotation: 0 });
   state.pageWidthPt = unrotated.width;
   state.pageHeightPt = unrotated.height;
@@ -77,25 +80,39 @@ export async function renderCurrentPage() {
   const ctx = canvas.getContext('2d');
   const stage = document.getElementById('page-stage');
 
-  if (activeRenderTask) {
-    try { activeRenderTask.cancel(); } catch (_) { /* ignore */ }
-  }
-
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.floor(viewport.width * dpr);
-  canvas.height = Math.floor(viewport.height * dpr);
+  // Update stage/CSS size immediately so layout & scroll anchoring stay exact without clearing canvas
   canvas.style.width = `${viewport.width}px`;
   canvas.style.height = `${viewport.height}px`;
   stage.style.width = `${viewport.width}px`;
   stage.style.height = `${viewport.height}px`;
 
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  activeRenderTask = page.render({ canvasContext: ctx, viewport });
+  if (activeRenderTask) {
+    try { activeRenderTask.cancel(); } catch (_) { /* ignore */ }
+  }
+
+  // Double-buffer onto an offscreen canvas so the visible canvas NEVER flashes blank while rendering
+  const dpr = window.devicePixelRatio || 1;
+  const offCanvas = document.createElement('canvas');
+  offCanvas.width = Math.max(1, Math.floor(viewport.width * dpr));
+  offCanvas.height = Math.max(1, Math.floor(viewport.height * dpr));
+  const offCtx = offCanvas.getContext('2d');
+  offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  activeRenderTask = page.render({ canvasContext: offCtx, viewport });
   try {
     await activeRenderTask.promise;
   } catch (err) {
     if (err?.name !== 'RenderingCancelledException') console.error(err);
+    return;
   }
+  if (seq !== renderSeq) return;
+
+  // Atomic same-frame swap: resize + drawImage synchronously before browser repaints
+  canvas.width = offCanvas.width;
+  canvas.height = offCanvas.height;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.drawImage(offCanvas, 0, 0);
+
   if (!snapCache.has(state.currentPage) && window.pdfjsLib?.OPS) {
     snapCache.set(state.currentPage, await extractPageSnapPoints(page, window.pdfjsLib.OPS));
   }
