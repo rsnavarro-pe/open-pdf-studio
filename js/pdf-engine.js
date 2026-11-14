@@ -145,10 +145,72 @@ export function hasZoomHistory() {
   return zoomHistory.length > 0;
 }
 
+function animateZoomTransition(targetZoom, targetMidPt, scrollerEl, exactScroll = null, durationMs = 220) {
+  return new Promise((resolve) => {
+    const stage = document.getElementById('page-stage');
+    const canvas = document.getElementById('pdf-canvas');
+    const svg = document.getElementById('overlay-svg');
+    const lcdZoom = document.getElementById('lcd-zoom');
+    if (!stage || !canvas || !scrollerEl) { state.zoom = targetZoom; resolve(); return; }
+
+    const startZoom = state.zoom;
+    const startSL = scrollerEl.scrollLeft;
+    const startST = scrollerEl.scrollTop;
+    const isSwap = state.rotation % 180 === 90;
+    const baseW = isSwap ? state.pageHeightPt : state.pageWidthPt;
+    const baseH = isSwap ? state.pageWidthPt : state.pageHeightPt;
+
+    // Precompute final scroll position at targetZoom
+    let endSL = startSL;
+    let endST = startST;
+    if (exactScroll) {
+      endSL = exactScroll.scrollLeft;
+      endST = exactScroll.scrollTop;
+    } else if (targetMidPt) {
+      stage.style.width = `${baseW * targetZoom}px`;
+      stage.style.height = `${baseH * targetZoom}px`;
+      const spEnd = pdfToScreen(targetMidPt.x, targetMidPt.y, targetZoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
+      const stRect = stage.getBoundingClientRect();
+      const scRect = scrollerEl.getBoundingClientRect();
+      endSL = Math.max(0, startSL + (stRect.left + spEnd.x) - (scRect.left + scrollerEl.clientWidth / 2));
+      endST = Math.max(0, startST + (stRect.top + spEnd.y) - (scRect.top + scrollerEl.clientHeight / 2));
+      stage.style.width = `${baseW * startZoom}px`;
+      stage.style.height = `${baseH * startZoom}px`;
+    }
+
+    if (svg) svg.style.transformOrigin = '0 0';
+    const t0 = performance.now();
+
+    const step = (now) => {
+      const rawT = Math.min(1, (now - t0) / durationMs);
+      const ease = 1 - Math.pow(1 - rawT, 3); // smooth ease-out cubic
+      const curZoom = startZoom + (targetZoom - startZoom) * ease;
+
+      stage.style.width = `${baseW * curZoom}px`;
+      stage.style.height = `${baseH * curZoom}px`;
+      canvas.style.width = `${baseW * curZoom}px`;
+      canvas.style.height = `${baseH * curZoom}px`;
+      if (svg) svg.style.transform = `scale(${curZoom / startZoom})`;
+      scrollerEl.scrollLeft = startSL + (endSL - startSL) * ease;
+      scrollerEl.scrollTop = startST + (endST - startST) * ease;
+      if (lcdZoom) lcdZoom.textContent = `${Math.round(curZoom * 100)}%`;
+
+      if (rawT < 1) {
+        requestAnimationFrame(step);
+      } else {
+        if (svg) svg.style.transform = '';
+        state.zoom = targetZoom;
+        resolve();
+      }
+    };
+    requestAnimationFrame(step);
+  });
+}
+
 export async function popZoomHistory(scrollerEl) {
   if (!zoomHistory.length || !pdfDocA) return;
   const prev = zoomHistory.pop();
-  state.zoom = prev.zoom;
+  await animateZoomTransition(prev.zoom, null, scrollerEl, prev, 200);
   await renderCurrentPage();
   if (scrollerEl) {
     scrollerEl.scrollLeft = prev.scrollLeft;
@@ -170,16 +232,15 @@ export async function zoomToRegion(p0, p1, scrollerEl) {
   const regH = isSwap ? dx : dy;
   const availW = Math.max(200, scrollerEl.clientWidth - 36);
   const availH = Math.max(200, scrollerEl.clientHeight - 36);
-  state.zoom = Math.max(0.25, Math.min(12, Math.min(availW / regW, availH / regH) * 0.94));
-  await renderCurrentPage();
-
+  const targetZoom = Math.max(0.25, Math.min(12, Math.min(availW / regW, availH / regH) * 0.94));
   const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
-  const sp = pdfToScreen(mid.x, mid.y, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
-  const stage = document.getElementById('page-stage');
-  const stageRect = stage.getBoundingClientRect();
-  const scrollerRect = scrollerEl.getBoundingClientRect();
-  scrollerEl.scrollLeft += (stageRect.left + sp.x) - (scrollerRect.left + scrollerEl.clientWidth / 2);
-  scrollerEl.scrollTop += (stageRect.top + sp.y) - (scrollerRect.top + scrollerEl.clientHeight / 2);
+
+  await animateZoomTransition(targetZoom, mid, scrollerEl, null, 220);
+  const finalSL = scrollerEl.scrollLeft;
+  const finalST = scrollerEl.scrollTop;
+  await renderCurrentPage();
+  scrollerEl.scrollLeft = finalSL;
+  scrollerEl.scrollTop = finalST;
 }
 
 export async function renderAllThumbnails() {
