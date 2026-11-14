@@ -94,6 +94,7 @@
                 </div>
                 <div class="craft-dd-col">
                   <div class="craft-dd-group-title">CREATE &amp; OPTIMIZE PDF</div>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="Blank PDF"><span class="dd-ico" style="color:#34d399">📄</span>Create Blank PDF (Letter / A4 / ARCH D)</button>
                   <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="Images to PDF"><span class="dd-ico" style="color:#fb7185">📷</span>Images (JPG/PNG/WebP/SVG/TIFF) to PDF</button>
                   <button type="button" class="craft-dd-item" data-open-hub="CAD" data-hub-q="DWG"><span class="dd-ico" style="color:#2dd4bf">🏗</span>AutoCAD DWG / DXF to PDF</button>
                   <button type="button" class="craft-dd-item" data-open-hub="ORGANIZE" data-hub-q="Merge"><span class="dd-ico" style="color:#60a5fa">⧉</span>Combine / Merge Multiple PDFs</button>
@@ -656,6 +657,39 @@
         </div>
 
         <!-- Convert To PDF -->
+        <div class="tool-card">
+          <div class="tool-cat">CREATE PDF</div>
+          <h4>Create Blank PDF</h4>
+          <p>Generate a clean blank, engineering grid, or lined PDF and open it in the studio or download.</p>
+          <div class="tool-actions">
+            <select id="tool-blank-size" style="flex:1">
+              <option value="letter">Letter (8.5 × 11 in)</option>
+              <option value="legal">Legal (8.5 × 14 in)</option>
+              <option value="tabloid">Tabloid (11 × 17 in)</option>
+              <option value="a4">A4 (210 × 297 mm)</option>
+              <option value="a3">A3 (297 × 420 mm)</option>
+              <option value="archd">ARCH D (24 × 36 in)</option>
+              <option value="arche">ARCH E (36 × 48 in)</option>
+            </select>
+            <select id="tool-blank-orient" style="width:94px">
+              <option value="portrait">Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div class="tool-actions">
+            <select id="tool-blank-style" style="flex:1">
+              <option value="plain">Plain White</option>
+              <option value="grid">Engineering Grid</option>
+              <option value="lined">Lined Note Sheet</option>
+            </select>
+            <input id="tool-blank-pages" type="number" min="1" max="100" value="1" style="width:58px" title="Number of pages" />
+          </div>
+          <div class="tool-actions">
+            <button id="tool-blank-open" class="btn btn-primary btn-sm">Open in Studio</button>
+            <button id="tool-blank-download" class="btn btn-secondary btn-sm">Download PDF</button>
+          </div>
+        </div>
+
         <div class="tool-card">
           <div class="tool-cat">CONVERT TO PDF</div>
           <h4>Images to PDF</h4>

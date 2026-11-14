@@ -11,7 +11,7 @@ const RAIL_TOOLS = [
   { id: 'arrow', label: 'Multi-leader Arrow', desc: 'Attach 2+ leader arrow branches to one callout/arrow', icon: '↗', color: '#fb923c', cat: 'edit', canvasTool: 'arrow' },
   { id: 'cloud', label: 'Revision Cloud', desc: 'Scalloped revision cloud with delta tag', icon: '☁', color: '#f87171', cat: 'edit', canvasTool: 'cloud' },
   { id: 'export', label: 'Export a PDF', desc: 'Export pages to PNG, JPG, TIFF, WebP, SVG, PPTX, DOCX', icon: '📤', color: '#818cf8', cat: 'convert', hubFilter: 'CONVERT', hubQ: 'Images' },
-  { id: 'create', label: 'Create a PDF', desc: 'Convert Images, DWG/DXF, or Blank sheets to PDF', icon: '📄', color: '#fb7185', cat: 'convert', hubFilter: 'CONVERT', hubQ: 'Images to PDF' },
+  { id: 'create', label: 'Create a PDF', desc: 'Create Blank PDF (Grid/Lined) or convert Images & CAD to PDF', icon: '📄', color: '#fb7185', cat: 'convert', hubFilter: 'CONVERT', hubQ: 'Blank PDF' },
   { id: 'combine', label: 'Combine files', desc: 'Merge PDFs sequentially, interleaved, or by max size', icon: '⧉', color: '#60a5fa', cat: 'convert', hubFilter: 'ORGANIZE', hubQ: 'Merge' },
   { id: 'compress', label: 'Compress a PDF', desc: 'Low, Medium & High presets with size reduction', icon: '🗜', color: '#fb923c', cat: 'convert', hubFilter: 'OPTIMIZE', hubQ: 'Compress' },
   { id: 'ocr', label: 'Scan & OCR', desc: 'Client-side Tesseract OCR searchable text extraction', icon: '⛶', color: '#34d399', cat: 'convert', hubFilter: 'CONVERT', hubQ: 'OCR' },

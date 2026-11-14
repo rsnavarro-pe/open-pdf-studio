@@ -10,6 +10,7 @@ import { dxfTextToPdfBytes } from './dxf-to-pdf.js';
 import { dwgBytesToPdfBytes } from './dwg-to-pdf.js';
 import { loadPdfA } from './pdf-engine.js';
 import { initCraftTools } from './tools-craft-ui.js';
+import { clearWorkbenchForce } from './workbench-ui.js';
 
 export function initPdfTools() {
   const modal = document.getElementById('tools-modal');
@@ -220,7 +221,61 @@ export function initPdfTools() {
     e.target.value = '';
   });
 
+  // Create Blank PDF
+  const buildBlank = async (openInStudio) => {
+    const size = document.getElementById('tool-blank-size').value;
+    const orient = document.getElementById('tool-blank-orient').value;
+    const style = document.getElementById('tool-blank-style').value;
+    const pages = Math.max(1, Math.min(100, Number(document.getElementById('tool-blank-pages').value) || 1));
+    const bytes = await createBlankPdfBytes({ size, orient, style, pages });
+    const fileName = `Blank_${size.toUpperCase()}_${pages}p.pdf`;
+    if (openInStudio) {
+      clearWorkbenchForce();
+      await loadPdfA(bytes.buffer.slice(0), fileName);
+      modal.classList.add('hidden');
+      setStatus(`Opened ${fileName} in Studio.`);
+    } else {
+      triggerDownload(new Blob([bytes], { type: 'application/pdf' }), fileName);
+      setStatus(`Downloaded ${fileName}.`);
+    }
+  };
+  document.getElementById('tool-blank-open')?.addEventListener('click', () => runSafe(setStatus, () => buildBlank(true)));
+  document.getElementById('tool-blank-download')?.addEventListener('click', () => runSafe(setStatus, () => buildBlank(false)));
+
   initCraftTools(setStatus, runSafe, requireOpenPdf);
+}
+
+async function createBlankPdfBytes({ size, orient, style, pages }) {
+  const { PDFDocument, rgb } = window.PDFLib;
+  const sizesPt = {
+    letter: [612, 792], legal: [612, 1008], tabloid: [792, 1224],
+    a4: [595.28, 841.89], a3: [841.89, 1190.55], archd: [1728, 2592], arche: [2592, 3456],
+  };
+  const [rawW, rawH] = sizesPt[size] || sizesPt.letter;
+  const w = orient === 'landscape' ? Math.max(rawW, rawH) : Math.min(rawW, rawH);
+  const h = orient === 'landscape' ? Math.min(rawW, rawH) : Math.max(rawW, rawH);
+
+  const doc = await PDFDocument.create();
+  for (let i = 0; i < pages; i++) {
+    const page = doc.addPage([w, h]);
+    if (style === 'grid') {
+      const step = 18; // 0.25 in
+      for (let x = step; x < w; x += step) {
+        const major = Math.round(x / step) % 4 === 0;
+        page.drawLine({ start: { x, y: 0 }, end: { x, y: h }, thickness: major ? 0.6 : 0.25, color: rgb(0.82, 0.87, 0.94) });
+      }
+      for (let y = step; y < h; y += step) {
+        const major = Math.round(y / step) % 4 === 0;
+        page.drawLine({ start: { x: 0, y }, end: { x: w, y }, thickness: major ? 0.6 : 0.25, color: rgb(0.82, 0.87, 0.94) });
+      }
+    } else if (style === 'lined') {
+      for (let y = h - 54; y > 36; y -= 22) {
+        page.drawLine({ start: { x: 36, y }, end: { x: w - 36, y }, thickness: 0.5, color: rgb(0.82, 0.86, 0.92) });
+      }
+      page.drawLine({ start: { x: 72, y: 36 }, end: { x: 72, y: h - 36 }, thickness: 0.8, color: rgb(0.92, 0.65, 0.65) });
+    }
+  }
+  return doc.save();
 }
 
 function requireOpenPdf(setStatus) {
