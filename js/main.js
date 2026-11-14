@@ -119,8 +119,13 @@ function bindFileEvents() {
 function bindToolEvents() {
   document.querySelectorAll('.tool-btn').forEach((btn) => {
     if (btn.id === 'btn-sign-tool') return;
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       clearWorkbenchForce();
+      if (!state.pdfBytes) {
+        const bytes = await generateSamplePdfBytes(false);
+        await loadPdfA(bytes.buffer, 'Sample_FloorPlan_RevA.pdf');
+        recordRecentFile('Sample_FloorPlan_RevA.pdf', state.numPages, bytes.byteLength);
+      }
       setTool(btn.dataset.tool);
     });
   });
@@ -164,7 +169,12 @@ function bindNavigationEvents() {
 }
 
 function bindCompareEvents() {
-  document.getElementById('btn-compare-toggle').addEventListener('click', () => {
+  document.getElementById('btn-compare-toggle').addEventListener('click', async () => {
+    clearWorkbenchForce();
+    if (!state.pdfBytes) {
+      const bytes = await generateSamplePdfBytes(false);
+      await loadPdfA(bytes.buffer, 'Sample_FloorPlan_RevA.pdf');
+    }
     state.compare.active = !state.compare.active;
     notify();
   });

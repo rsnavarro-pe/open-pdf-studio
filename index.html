@@ -19,7 +19,7 @@
 </head>
 <body class="craft-dark">
   <div id="app" class="studio-shell">
-    <!-- Top Header & Toolbar -->
+    <!-- Top Header & Dropdown Navigation -->
     <header class="studio-header">
       <div class="craft-topbar">
         <div class="craft-top-left">
@@ -27,13 +27,115 @@
             <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="brand-logo" />
             <h1>RSN PDF Studio</h1>
           </div>
-          <nav class="craft-top-tabs" aria-label="Workbench Categories">
-            <button type="button" class="craft-top-tab active" data-top-cat="all">All tools</button>
-            <button type="button" class="craft-top-tab" data-top-cat="edit">Edit</button>
-            <button type="button" class="craft-top-tab" data-top-cat="convert">Convert</button>
-            <button type="button" class="craft-top-tab" data-top-cat="esign">E-Sign</button>
-            <button type="button" class="craft-top-tab" data-top-cat="measure">Measure &amp; CAD</button>
-            <button type="button" id="btn-home-workbench" class="craft-top-tab" title="Toggle Welcome Workbench / Active Drawing">⌂ Workbench</button>
+
+          <!-- 5 Main Category Tabs with Dropdown Menus -->
+          <nav class="craft-top-tabs" aria-label="Main Categories">
+            <!-- 1. All tools -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="craft-top-tab active" data-top-cat="all">All tools <span class="dd-caret">▾</span></button>
+              <div class="craft-dd-menu craft-dd-wide" data-dd-for="all">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">WORKBENCH &amp; QUICK START</div>
+                  <button type="button" class="craft-dd-item" data-wb-action="home"><span class="dd-ico" style="color:#60a5fa">⌂</span>Welcome Workbench Home</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="all"><span class="dd-ico" style="color:#818cf8">⚡</span>Open Full 18-Tool PDF Hub</button>
+                  <button type="button" class="craft-dd-item" onclick="document.getElementById('btn-load-sample').click()"><span class="dd-ico" style="color:#34d399">📐</span>Load Sample Floor Plan</button>
+                  <div class="craft-dd-group-title">ORGANIZE &amp; OPTIMIZE</div>
+                  <button type="button" class="craft-dd-item" data-open-hub="ORGANIZE"><span class="dd-ico" style="color:#4ade80">⊞</span>Organize, Merge &amp; Split Pages</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="OPTIMIZE"><span class="dd-ico" style="color:#fb923c">🗜</span>Compress, Grayscale &amp; Crop</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT"><span class="dd-ico" style="color:#f472b6">🔄</span>Convert Images, Office &amp; OCR</button>
+                </div>
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">CANVAS &amp; ENGINEERING</div>
+                  <button type="button" class="craft-dd-item" data-switch-cat="edit"><span class="dd-ico" style="color:#ec4899">✎</span>Edit &amp; Comment on PDF →</button>
+                  <button type="button" class="craft-dd-item" data-switch-cat="esign"><span class="dd-ico" style="color:#a855f7">✒</span>E-Sign, Stamps &amp; Forms →</button>
+                  <button type="button" class="craft-dd-item" data-switch-cat="measure"><span class="dd-ico" style="color:#e879f9">📏</span>Measure, Takeoff &amp; CAD →</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CAD"><span class="dd-ico" style="color:#2dd4bf">🏗</span>DWG / DXF ↔ PDF &amp; CSV Tables</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="SECURITY"><span class="dd-ico" style="color:#38bdf8">🛡</span>Unlock, Protect &amp; Workflows</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Edit -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="craft-top-tab" data-top-cat="edit">Edit <span class="dd-caret">▾</span></button>
+              <div class="craft-dd-menu craft-dd-wide" data-dd-for="edit">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">TEXT, LEADERS &amp; MARKUP</div>
+                  <button type="button" class="craft-dd-item tool-btn active" data-tool="select"><span class="dd-ico" style="color:#9ca3af">↖</span>Select / Inspect <kbd>V</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="pan"><span class="dd-ico" style="color:#9ca3af">✥</span>Pan Drawing <kbd>H</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="text"><span class="dd-ico" style="color:#ec4899">T</span>Text Box / Note <kbd>T</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="callout"><span class="dd-ico" style="color:#facc15">💬</span>Callout Leader (Multi-Leader) <kbd>L</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="arrow"><span class="dd-ico" style="color:#fb923c">↗</span>Arrow (Multi-Leader)</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="cloud"><span class="dd-ico" style="color:#f87171">☁</span>Revision Cloud <kbd>C</kbd></button>
+                </div>
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">REVIEW &amp; PAGE EDITING</div>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="highlight"><span class="dd-ico" style="color:#facc15">🖍</span>Highlight Text</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="underline"><span class="dd-ico" style="color:#38bdf8"><u>U</u></span>Underline Text</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="strike"><span class="dd-ico" style="color:#f87171"><s>S</s></span>Strikethrough Text</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="note"><span class="dd-ico" style="color:#fbbf24">📌</span>Sticky Note Comment <kbd>N</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="rect"><span class="dd-ico" style="color:#60a5fa">▭</span>Rectangle Box</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="pen"><span class="dd-ico" style="color:#a78bfa">✎</span>Freehand Pen</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="ORGANIZE"><span class="dd-ico" style="color:#4ade80">⊞</span>Organize, Rotate &amp; Split Pages...</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Convert -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="craft-top-tab" data-top-cat="convert">Convert <span class="dd-caret">▾</span></button>
+              <div class="craft-dd-menu craft-dd-wide" data-dd-for="convert">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">EXPORT FROM PDF</div>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="PDF to Images"><span class="dd-ico" style="color:#818cf8">🖼</span>PDF to PNG / JPG / TIFF / WebP / SVG</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="PowerPoint"><span class="dd-ico" style="color:#fb923c">📑</span>PDF to PowerPoint (PPTX) &amp; Word (DOCX)</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CAD" data-hub-q="PDF to AutoCAD"><span class="dd-ico" style="color:#2dd4bf">📐</span>PDF to AutoCAD DXF</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CAD" data-hub-q="Extract Tables"><span class="dd-ico" style="color:#38bdf8">📊</span>Extract PDF Tables to CSV</button>
+                </div>
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">CREATE &amp; OPTIMIZE PDF</div>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="Images to PDF"><span class="dd-ico" style="color:#fb7185">📷</span>Images (JPG/PNG/WebP/SVG/TIFF) to PDF</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CAD" data-hub-q="DWG"><span class="dd-ico" style="color:#2dd4bf">🏗</span>AutoCAD DWG / DXF to PDF</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="ORGANIZE" data-hub-q="Merge"><span class="dd-ico" style="color:#60a5fa">⧉</span>Combine / Merge Multiple PDFs</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="OPTIMIZE" data-hub-q="Compress"><span class="dd-ico" style="color:#fb923c">🗜</span>Compress PDF File Size</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="CONVERT" data-hub-q="OCR"><span class="dd-ico" style="color:#34d399">⛶</span>Scan &amp; OCR Searchable Text</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="ORGANIZE" data-hub-q="N-Up"><span class="dd-ico" style="color:#a78bfa">🖨</span>Print Production (N-Up, Crop, Grayscale)</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 4. E-Sign -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="craft-top-tab" data-top-cat="esign">E-Sign <span class="dd-caret">▾</span></button>
+              <div class="craft-dd-menu" data-dd-for="esign">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">SIGNATURES, STAMPS &amp; SECURITY</div>
+                  <button type="button" id="btn-sign-tool" class="craft-dd-item tool-btn" data-tool="sign"><span class="dd-ico" style="color:#a855f7">✒</span>Fill &amp; Sign (Draw / Type / Upload Signature)</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="stamp"><span class="dd-ico" style="color:#c084fc">✪</span>Add Engineering Review Stamp</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="SECURITY" data-hub-q="AcroForm"><span class="dd-ico" style="color:#818cf8">⌸</span>Prepare, Fill &amp; Flatten AcroForms</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="redact"><span class="dd-ico" style="color:#f87171">⬛</span>Redact a PDF (Permanent Blackout)</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="SECURITY" data-hub-q="Unlock"><span class="dd-ico" style="color:#38bdf8">🔓</span>Unlock Password-Protected PDF</button>
+                  <button type="button" class="craft-dd-item" data-open-hub="SECURITY" data-hub-q="Watermark"><span class="dd-ico" style="color:#60a5fa">🛡</span>Watermark, Bates Stamp &amp; Metadata</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Measure & CAD -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="craft-top-tab" data-top-cat="measure">Measure &amp; CAD <span class="dd-caret">▾</span></button>
+              <div class="craft-dd-menu" data-dd-for="measure">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">SCALE, TAKEOFF &amp; CAD TOOLS</div>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="calibrate"><span class="dd-ico" style="color:#34d399">⌖</span>Calibrate Scale from Known Dimension</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="distance"><span class="dd-ico" style="color:#e879f9">↔</span>Measure Straight Distance <kbd>M</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="perimeter"><span class="dd-ico" style="color:#c084fc">⌇</span>Measure Polyline Perimeter <kbd>P</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="area"><span class="dd-ico" style="color:#60a5fa">⬠</span>Measure Polygon Area <kbd>A</kbd></button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="cutout"><span class="dd-ico" style="color:#f87171">◪</span>Area Cutout / Deduction</button>
+                  <button type="button" class="craft-dd-item tool-btn" data-tool="count"><span class="dd-ico" style="color:#facc15">#</span>Count Items Pin <kbd>K</kbd></button>
+                  <button type="button" id="btn-compare-toggle" class="craft-dd-item"><span class="dd-ico" style="color:#f472b6">⇄</span>Compare Two PDF Revisions (Overlay / Side-by-Side)</button>
+                </div>
+              </div>
+            </div>
           </nav>
         </div>
 
@@ -43,92 +145,59 @@
             <input id="global-cmd-search" type="search" placeholder="Find tools and commands" autocomplete="off" />
             <kbd class="cmd-kbd">⌘K</kbd>
           </div>
+
           <div class="file-actions">
-            <label class="btn btn-primary btn-sm" for="pdf-file-input">Open PDF</label>
+            <label class="btn btn-primary btn-sm" for="pdf-file-input">📁 Open PDF</label>
             <input id="pdf-file-input" type="file" accept="application/pdf" hidden />
-            <button id="btn-load-sample" class="btn btn-secondary btn-sm" title="Generate & open a sample architectural floor plan">Sample Plan</button>
-            <button id="btn-pdf-tools" class="btn btn-secondary btn-sm" title="Open All-in-One PDF Tool Hub">Tool Hub</button>
-            <button id="btn-export-pdf" class="btn btn-accent btn-sm" disabled title="Save / Export Annotated PDF">💾 Export PDF</button>
-            <button id="btn-export-dxf" class="btn btn-secondary btn-sm" disabled title="Quick export current page to AutoCAD DXF">DXF</button>
-            <button id="btn-export-csv" class="btn btn-secondary btn-sm" disabled title="Export Takeoff CSV">CSV</button>
-            <button id="btn-save-project" class="btn btn-secondary btn-sm" disabled title="Save markups, scale & BOQ (.rsn.json)">Save Proj</button>
-            <label class="btn btn-secondary btn-sm" for="project-file-input" title="Load .rsn.json project onto open PDF">Load Proj</label>
-            <input id="project-file-input" type="file" accept=".json,.rsn.json,application/json" hidden />
+
+            <!-- Consolidated File & Export Dropdown -->
+            <div class="craft-dd-wrap">
+              <button type="button" class="btn btn-secondary btn-sm" data-file-dd="toggle">File &amp; Export ▾</button>
+              <div class="craft-dd-menu craft-dd-right" id="file-export-dd">
+                <div class="craft-dd-col">
+                  <div class="craft-dd-group-title">DOCUMENT &amp; EXPORT</div>
+                  <button id="btn-load-sample" type="button" class="craft-dd-item">📐 Load Sample Floor Plan</button>
+                  <button id="btn-pdf-tools" type="button" class="craft-dd-item">⚡ Open All-in-One PDF Tool Hub</button>
+                  <button id="btn-export-pdf" type="button" class="craft-dd-item" disabled>💾 Export Annotated PDF</button>
+                  <button id="btn-export-dxf" type="button" class="craft-dd-item" disabled>📐 Quick Export Current Page to DXF</button>
+                  <button id="btn-export-csv" type="button" class="craft-dd-item" disabled>📊 Export Takeoff CSV</button>
+                  <div class="craft-dd-group-title">PROJECT SESSION (.RSN.JSON)</div>
+                  <button id="btn-save-project" type="button" class="craft-dd-item" disabled>📦 Save Project (.rsn.json)</button>
+                  <label class="craft-dd-item" for="project-file-input" style="cursor:pointer">📂 Load Project (.rsn.json)</label>
+                  <input id="project-file-input" type="file" accept=".json,.rsn.json,application/json" hidden />
+                </div>
+              </div>
+            </div>
+
+            <button type="button" id="btn-home-workbench" class="btn-icon btn-sm" title="Switch between Welcome Workbench & Active PDF Canvas">⌂</button>
+            <button type="button" id="btn-toggle-inspector" class="btn-icon btn-sm" title="Show / Hide Right Properties Inspector">◨</button>
             <button id="btn-theme-toggle" class="btn-icon btn-sm" title="Toggle Dark Workbench / Light Editorial Theme">☀</button>
           </div>
         </div>
       </div>
 
-      <nav class="tool-ribbon" aria-label="Studio Tools">
-        <div class="ribbon-pod">
-          <span class="pod-label">NAV</span>
-          <div class="tool-group">
-            <button class="tool-btn active" data-tool="select" title="Select / Inspect (V)">↖ Select</button>
-            <button class="tool-btn" data-tool="pan" title="Pan Canvas (H)">✥ Pan</button>
-          </div>
+      <!-- Slim Contextual Canvas Bar (Hidden on Welcome Workbench; Shown only when editing a PDF) -->
+      <nav id="slim-canvas-bar" class="slim-canvas-bar hidden" aria-label="Canvas Quick Controls">
+        <div class="slim-bar-left">
+          <span id="active-tool-pill" class="active-tool-pill">Tool: Select</span>
+          <button class="btn-icon btn-sm tool-btn active" data-tool="select" title="Select (V)">↖ Select</button>
+          <button class="btn-icon btn-sm tool-btn" data-tool="pan" title="Pan (H)">✥ Pan</button>
+          <span class="slim-sep"></span>
+          <button id="btn-undo" class="btn-icon btn-sm" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
+          <button id="btn-redo" class="btn-icon btn-sm" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
+          <button id="btn-delete-selected" class="btn-icon btn-sm" title="Delete Selected (Del)" disabled>✕ Del</button>
+          <span class="slim-sep"></span>
+          <button id="btn-zoom-out" class="btn-icon btn-sm" title="Zoom Out">−</button>
+          <button id="btn-zoom-fit" class="btn-icon btn-sm" title="Fit Width">Fit</button>
+          <button id="btn-zoom-in" class="btn-icon btn-sm" title="Zoom In">+</button>
+          <button id="btn-rotate" class="btn-icon btn-sm" title="Rotate 90°">↻ 90°</button>
+          <button id="btn-osnap" class="btn-icon btn-sm active" title="Toggle CAD Object Snap">OSNAP</button>
+          <button id="btn-find" class="btn-icon btn-sm" title="Find Text (Ctrl+F)" disabled>⌕ Find</button>
         </div>
-        <div class="ribbon-pod">
-          <span class="pod-label">MEASURE &amp; TAKEOFF</span>
-          <div class="tool-group">
-            <button class="tool-btn" data-tool="calibrate" title="Calibrate Scale from Known Distance">⌖ Calibrate</button>
-            <button class="tool-btn" data-tool="distance" title="Measure Distance (M)">↔ Distance</button>
-            <button class="tool-btn" data-tool="perimeter" title="Measure Perimeter (P)">⌇ Perimeter</button>
-            <button class="tool-btn" data-tool="area" title="Measure Area (A)">⬠ Area</button>
-            <button class="tool-btn" data-tool="cutout" title="Area Cutout / Deduction">◪ Cutout</button>
-            <button class="tool-btn" data-tool="count" title="Count Items (K)"># Count</button>
-          </div>
-        </div>
-        <div class="ribbon-pod">
-          <span class="pod-label">MARKUP &amp; NOTES</span>
-          <div class="tool-group">
-            <button class="tool-btn" data-tool="cloud" title="Revision Cloud (C)">☁ Cloud</button>
-            <button class="tool-btn" data-tool="callout" title="Callout Leader (L)">💬 Callout</button>
-            <button class="tool-btn" data-tool="arrow" title="Arrow">↗ Arrow</button>
-            <button class="tool-btn" data-tool="rect" title="Rectangle">▭ Rect</button>
-            <button class="tool-btn" data-tool="pen" title="Freehand Pen">✎ Pen</button>
-            <button class="tool-btn" data-tool="highlight" title="Highlighter">🖍 Highlight</button>
-            <button class="tool-btn" data-tool="underline" title="Underline Text"><u>U</u> Line</button>
-            <button class="tool-btn" data-tool="strike" title="Strikethrough Text"><s>S</s> Strike</button>
-            <button class="tool-btn" data-tool="note" title="Sticky Note Comment (N)">📌 Note</button>
-            <button class="tool-btn" data-tool="text" title="Text Note (T)">T Text</button>
-          </div>
-        </div>
-        <div class="ribbon-pod">
-          <span class="pod-label">SIGN &amp; STAMP</span>
-          <div class="tool-group">
-            <button id="btn-sign-tool" class="tool-btn" data-tool="sign" title="Electronic Signature or Image Stamp">✒ Sign / Img</button>
-            <button class="tool-btn" data-tool="stamp" title="Engineering Stamp">✪ Stamp</button>
-            <button class="tool-btn" data-tool="redact" title="Blackout Redaction Box">⬛ Redact</button>
-          </div>
-        </div>
-        <div class="ribbon-pod">
-          <span class="pod-label">EDIT &amp; VIEW</span>
-          <div class="tool-group">
-            <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" disabled>↶</button>
-            <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" disabled>↷</button>
-            <button id="btn-delete-selected" class="btn-icon" title="Delete Selected (Del)" disabled>✕</button>
-            <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">−</button>
-            <button id="btn-zoom-fit" class="btn-icon" title="Fit Width">Fit</button>
-            <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
-            <button id="btn-rotate" class="btn-icon" title="Rotate 90°">↻</button>
-            <button id="btn-osnap" class="btn-icon active" title="Toggle CAD Object Snap (endpoints/corners)">OSNAP</button>
-            <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>⌕</button>
-            <button id="btn-compare-toggle" class="btn btn-compare btn-sm" title="Compare Two PDF Revisions">⇄ Compare</button>
-          </div>
-        </div>
-        <div class="lcd-cluster" style="margin-left:auto">
-          <div class="lcd-readout" title="Active Scale">
-            <span class="lcd-label">SCALE</span>
-            <span id="lcd-scale" class="lcd-value">Not Set</span>
-          </div>
-          <div class="lcd-readout" title="Cursor Coordinates">
-            <span class="lcd-label">XY</span>
-            <span id="lcd-coords" class="lcd-value">0.0, 0.0</span>
-          </div>
-          <div class="lcd-readout" title="Zoom Level">
-            <span class="lcd-label">ZOOM</span>
-            <span id="lcd-zoom" class="lcd-value">100%</span>
-          </div>
+        <div class="lcd-cluster">
+          <div class="lcd-readout" title="Active Scale"><span class="lcd-label">SCALE</span><span id="lcd-scale" class="lcd-value">Not Set</span></div>
+          <div class="lcd-readout" title="Cursor Coordinates"><span class="lcd-label">XY</span><span id="lcd-coords" class="lcd-value">0.0, 0.0</span></div>
+          <div class="lcd-readout" title="Zoom Level"><span class="lcd-label">ZOOM</span><span id="lcd-zoom" class="lcd-value">100%</span></div>
         </div>
       </nav>
     </header>
@@ -227,49 +296,8 @@
 
               <!-- Recommended Tools Container -->
               <section class="craft-rec-box">
-                <h3 class="craft-sec-title">Recommended tools</h3>
-                <div class="craft-rec-grid">
-                  <div class="craft-rec-card" data-open-hub="org-pages">
-                    <div class="craft-rec-head">
-                      <span class="craft-ico" style="color:#4ade80">⊞</span>
-                      <strong>Organize pages</strong>
-                    </div>
-                    <p>Page grid · Rotate · Delete · Split &amp; Extract</p>
-                    <span class="craft-use-link">Use now</span>
-                  </div>
-                  <div class="craft-rec-card" data-wb-tool="callout">
-                    <div class="craft-rec-head">
-                      <span class="craft-ico" style="color:#facc15">💬</span>
-                      <strong>Add comments</strong>
-                    </div>
-                    <p>Sticky note · Highlight text · Multi-leader Callout</p>
-                    <span class="craft-use-link">Use now</span>
-                  </div>
-                  <div class="craft-rec-card" data-open-hub="forms-pdf">
-                    <div class="craft-rec-head">
-                      <span class="craft-ico" style="color:#a855f7">⌸</span>
-                      <strong>Prepare a form</strong>
-                    </div>
-                    <p>Field list · Detect &amp; fill AcroForms · Flatten form</p>
-                    <span class="craft-use-link">Use now</span>
-                  </div>
-                  <div class="craft-rec-card" data-wb-tool="text">
-                    <div class="craft-rec-head">
-                      <span class="craft-ico" style="color:#ec4899">✎</span>
-                      <strong>Edit a PDF</strong>
-                    </div>
-                    <p>Edit text &amp; fonts · Multi-leader arrows · Rev clouds</p>
-                    <span class="craft-use-link">Use now</span>
-                  </div>
-                  <div class="craft-rec-card" data-open-hub="security">
-                    <div class="craft-rec-head">
-                      <span class="craft-ico" style="color:#38bdf8">🛡</span>
-                      <strong>Protect a PDF</strong>
-                    </div>
-                    <p>Unlock password · Watermark · Scrub hidden metadata</p>
-                    <span class="craft-use-link">Use now</span>
-                  </div>
-                </div>
+                <h3 id="craft-rec-title" class="craft-sec-title">Recommended tools</h3>
+                <div id="craft-rec-grid" class="craft-rec-grid"></div>
 
                 <div class="craft-open-row">
                   <label for="pdf-file-input" class="craft-open-tile">
@@ -341,146 +369,152 @@
         </footer>
       </section>
 
-      <!-- Right Properties & Scale Panel -->
-      <aside class="sidebar-right">
-        <div class="prop-section">
-          <h3>Scale &amp; Units</h3>
-          <div class="prop-row">
-            <label for="unit-select">Display Unit</label>
-            <select id="unit-select">
-              <option value="ft">Feet (ft)</option>
-              <option value="in">Inches (in)</option>
-              <option value="m" selected>Meters (m)</option>
-              <option value="cm">Centimeters (cm)</option>
-              <option value="mm">Millimeters (mm)</option>
-            </select>
-          </div>
-          <div class="prop-row">
-            <label for="preset-scale">Preset Scale</label>
-            <select id="preset-scale">
-              <option value="">-- Custom / Calibrate --</option>
-              <option value="1:10">1:10</option>
-              <option value="1:20">1:20</option>
-              <option value="1:30">1:30</option>
-              <option value="1:40">1:40</option>
-              <option value="1:50">1:50</option>
-              <option value="1:100">1:100</option>
-              <option value="1:200">1:200</option>
-              <option value="1/4in=1ft">1/4" = 1'-0"</option>
-              <option value="1/8in=1ft">1/8" = 1'-0"</option>
-            </select>
-          </div>
-          <p class="prop-note">Tip: Use <strong>Calibrate</strong> to click two points on a known dimension line.</p>
-        </div>
-
-        <div class="prop-section" id="props-card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <h3>Properties &amp; Style</h3>
+      <!-- Right Properties & Scale Panel (Collapsible Sections, Auto-Hidden on Welcome Screen) -->
+      <aside id="sidebar-right" class="sidebar-right hidden">
+        <details class="prop-section" id="props-card" open>
+          <summary class="prop-summary">
+            <span>Properties &amp; Style</span>
             <span id="prop-target-badge" class="mono" style="font-size:10px;padding:2px 6px;border-radius:3px;background:var(--lcd-bg);color:var(--accent-primary)">Defaults</span>
-          </div>
-          <div class="prop-row">
-            <label for="prop-text-content">Text / Tag</label>
-            <input id="prop-text-content" type="text" placeholder="Text, Callout, Note, or Rev #" style="flex:1;min-width:0" />
-          </div>
-          <div class="prop-row">
-            <label for="prop-font-family">Font</label>
-            <div style="display:flex;gap:4px;flex:1;min-width:0">
-              <select id="prop-font-family" style="flex:1;min-width:0">
-                <option value="Helvetica">Sans (Aptos/Arial)</option>
-                <option value="Courier">Mono (CAD)</option>
-                <option value="Times">Serif (Times)</option>
+          </summary>
+          <div class="prop-body">
+            <div class="prop-row">
+              <label for="prop-text-content">Text / Tag</label>
+              <input id="prop-text-content" type="text" placeholder="Text, Callout, Note, or Rev #" style="flex:1;min-width:0" />
+            </div>
+            <div class="prop-row">
+              <label for="prop-font-family">Font</label>
+              <div style="display:flex;gap:4px;flex:1;min-width:0">
+                <select id="prop-font-family" style="flex:1;min-width:0">
+                  <option value="Helvetica">Sans (Aptos/Arial)</option>
+                  <option value="Courier">Mono (CAD)</option>
+                  <option value="Times">Serif (Times)</option>
+                </select>
+                <input id="prop-font-size" type="number" min="7" max="60" value="13" style="width:48px" title="Font Size (pt)" />
+                <button type="button" id="prop-font-bold" class="btn-icon active" style="padding:2px 6px;font-weight:700" title="Bold">B</button>
+                <button type="button" id="prop-font-italic" class="btn-icon" style="padding:2px 6px;font-style:italic" title="Italic">I</button>
+              </div>
+            </div>
+            <div class="prop-row">
+              <label for="prop-color">Stroke / Fill</label>
+              <div style="display:flex;align-items:center;gap:6px">
+                <input id="prop-color" type="color" value="#c0392b" title="Stroke / Text Color" />
+                <input id="prop-fill-color" type="color" value="#ffffff" title="Fill / Box Color" />
+                <input id="prop-fill-opacity" type="range" min="0" max="100" value="12" style="width:64px" title="Fill Opacity (%)" />
+              </div>
+            </div>
+            <div class="prop-row">
+              <label for="prop-highlight-color">Highlight / Note</label>
+              <div class="swatch-row">
+                <button type="button" class="hi-swatch active" data-color="#facc15" style="background:#facc15" title="Yellow"></button>
+                <button type="button" class="hi-swatch" data-color="#4ade80" style="background:#4ade80" title="Green"></button>
+                <button type="button" class="hi-swatch" data-color="#38bdf8" style="background:#38bdf8" title="Blue"></button>
+                <button type="button" class="hi-swatch" data-color="#f472b6" style="background:#f472b6" title="Pink"></button>
+                <button type="button" class="hi-swatch" data-color="#fb923c" style="background:#fb923c" title="Orange"></button>
+                <button type="button" class="hi-swatch" data-color="#c084fc" style="background:#c084fc" title="Purple"></button>
+                <input id="prop-highlight-color" type="color" value="#facc15" title="Custom highlight/note color" />
+              </div>
+            </div>
+            <div class="prop-row">
+              <label for="prop-width">Line Width / Style</label>
+              <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+                <input id="prop-width" type="range" min="1" max="10" value="2" style="flex:1" />
+                <select id="prop-line-style" style="width:78px">
+                  <option value="solid">Solid</option>
+                  <option value="dashed">Dashed</option>
+                  <option value="dotted">Dotted</option>
+                </select>
+              </div>
+            </div>
+            <div class="prop-row">
+              <label for="prop-arrow-head">Arrowhead</label>
+              <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
+                <select id="prop-arrow-head" style="flex:1;min-width:0">
+                  <option value="closed">Filled Arrow</option>
+                  <option value="open">Open V-Arrow</option>
+                  <option value="slash">45° Arch Tick</option>
+                  <option value="dot">Leader Dot</option>
+                  <option value="both">Double-Ended</option>
+                </select>
+                <input id="prop-arrow-size" type="number" min="6" max="28" value="11" style="width:44px" title="Arrowhead Size (pt)" />
+                <button type="button" id="btn-add-leader" class="btn btn-secondary btn-sm" style="padding:3px 7px;white-space:nowrap" title="Attach another leader arrow branch to the selected Arrow or Callout" disabled>+ Leader</button>
+              </div>
+            </div>
+            <div class="prop-row">
+              <label for="prop-cloud-arc">Cloud Arc (pt)</label>
+              <input id="prop-cloud-arc" type="range" min="6" max="32" value="14" />
+            </div>
+            <div class="prop-row">
+              <label for="prop-stamp">Stamp Type</label>
+              <select id="prop-stamp">
+                <option value="RSN APPROVED">RSN APPROVED</option>
+                <option value="RSN REVIEWED">RSN REVIEWED</option>
+                <option value="APPROVED">APPROVED</option>
+                <option value="FOR REVIEW">FOR REVIEW</option>
+                <option value="FOR CONSTRUCTION">FOR CONSTRUCTION</option>
+                <option value="REVISED">REVISED</option>
+                <option value="VOID">VOID</option>
               </select>
-              <input id="prop-font-size" type="number" min="7" max="60" value="13" style="width:48px" title="Font Size (pt)" />
-              <button type="button" id="prop-font-bold" class="btn-icon active" style="padding:2px 6px;font-weight:700" title="Bold">B</button>
-              <button type="button" id="prop-font-italic" class="btn-icon" style="padding:2px 6px;font-style:italic" title="Italic">I</button>
             </div>
           </div>
-          <div class="prop-row">
-            <label for="prop-color">Stroke / Fill</label>
-            <div style="display:flex;align-items:center;gap:6px">
-              <input id="prop-color" type="color" value="#c0392b" title="Stroke / Text Color" />
-              <input id="prop-fill-color" type="color" value="#ffffff" title="Fill / Box Color" />
-              <input id="prop-fill-opacity" type="range" min="0" max="100" value="12" style="width:64px" title="Fill Opacity (%)" />
-            </div>
-          </div>
-          <div class="prop-row">
-            <label for="prop-highlight-color">Highlight / Note</label>
-            <div class="swatch-row">
-              <button type="button" class="hi-swatch active" data-color="#facc15" style="background:#facc15" title="Yellow"></button>
-              <button type="button" class="hi-swatch" data-color="#4ade80" style="background:#4ade80" title="Green"></button>
-              <button type="button" class="hi-swatch" data-color="#38bdf8" style="background:#38bdf8" title="Blue"></button>
-              <button type="button" class="hi-swatch" data-color="#f472b6" style="background:#f472b6" title="Pink"></button>
-              <button type="button" class="hi-swatch" data-color="#fb923c" style="background:#fb923c" title="Orange"></button>
-              <button type="button" class="hi-swatch" data-color="#c084fc" style="background:#c084fc" title="Purple"></button>
-              <input id="prop-highlight-color" type="color" value="#facc15" title="Custom highlight/note color" />
-            </div>
-          </div>
-          <div class="prop-row">
-            <label for="prop-width">Line Width / Style</label>
-            <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
-              <input id="prop-width" type="range" min="1" max="10" value="2" style="flex:1" />
-              <select id="prop-line-style" style="width:78px">
-                <option value="solid">Solid</option>
-                <option value="dashed">Dashed</option>
-                <option value="dotted">Dotted</option>
-              </select>
-            </div>
-          </div>
-          <div class="prop-row">
-            <label for="prop-arrow-head">Arrowhead</label>
-            <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0">
-              <select id="prop-arrow-head" style="flex:1;min-width:0">
-                <option value="closed">Filled Arrow</option>
-                <option value="open">Open V-Arrow</option>
-                <option value="slash">45° Arch Tick</option>
-                <option value="dot">Leader Dot</option>
-                <option value="both">Double-Ended</option>
-              </select>
-              <input id="prop-arrow-size" type="number" min="6" max="28" value="11" style="width:44px" title="Arrowhead Size (pt)" />
-              <button type="button" id="btn-add-leader" class="btn btn-secondary btn-sm" style="padding:3px 7px;white-space:nowrap" title="Attach another leader arrow branch to the selected Arrow or Callout" disabled>+ Leader</button>
-            </div>
-          </div>
-          <div class="prop-row">
-            <label for="prop-cloud-arc">Cloud Arc (pt)</label>
-            <input id="prop-cloud-arc" type="range" min="6" max="32" value="14" />
-          </div>
-          <div class="prop-row">
-            <label for="prop-stamp">Stamp Type</label>
-            <select id="prop-stamp">
-              <option value="RSN APPROVED">RSN APPROVED</option>
-              <option value="RSN REVIEWED">RSN REVIEWED</option>
-              <option value="APPROVED">APPROVED</option>
-              <option value="FOR REVIEW">FOR REVIEW</option>
-              <option value="FOR CONSTRUCTION">FOR CONSTRUCTION</option>
-              <option value="REVISED">REVISED</option>
-              <option value="VOID">VOID</option>
-            </select>
-          </div>
-        </div>
+        </details>
 
-        <div class="prop-section">
-          <h3>Takeoff &amp; BOQ</h3>
-          <div class="prop-row">
-            <label for="takeoff-item-select">Active Takeoff Item</label>
-            <div class="takeoff-picker">
-              <select id="takeoff-item-select">
-                <option value="">-- General Measurement --</option>
+        <details class="prop-section" open>
+          <summary class="prop-summary"><span>Scale &amp; Units</span></summary>
+          <div class="prop-body">
+            <div class="prop-row">
+              <label for="unit-select">Display Unit</label>
+              <select id="unit-select">
+                <option value="ft">Feet (ft)</option>
+                <option value="in">Inches (in)</option>
+                <option value="m" selected>Meters (m)</option>
+                <option value="cm">Centimeters (cm)</option>
+                <option value="mm">Millimeters (mm)</option>
               </select>
-              <button id="btn-add-takeoff-item" class="btn btn-secondary btn-sm" title="Create new takeoff item">+ Item</button>
+            </div>
+            <div class="prop-row">
+              <label for="preset-scale">Preset Scale</label>
+              <select id="preset-scale">
+                <option value="">-- Custom / Calibrate --</option>
+                <option value="1:10">1:10</option>
+                <option value="1:20">1:20</option>
+                <option value="1:30">1:30</option>
+                <option value="1:40">1:40</option>
+                <option value="1:50">1:50</option>
+                <option value="1:100">1:100</option>
+                <option value="1:200">1:200</option>
+                <option value="1/4in=1ft">1/4" = 1'-0"</option>
+                <option value="1/8in=1ft">1/8" = 1'-0"</option>
+              </select>
+            </div>
+            <p class="prop-note">Tip: Use <strong>Calibrate</strong> under Measure &amp; CAD to click two points on a known dimension.</p>
+          </div>
+        </details>
+
+        <details class="prop-section">
+          <summary class="prop-summary"><span>Takeoff &amp; BOQ</span></summary>
+          <div class="prop-body">
+            <div class="prop-row">
+              <label for="takeoff-item-select">Active Takeoff Item</label>
+              <div class="takeoff-picker">
+                <select id="takeoff-item-select">
+                  <option value="">-- General Measurement --</option>
+                </select>
+                <button id="btn-add-takeoff-item" class="btn btn-secondary btn-sm" title="Create new takeoff item">+ Item</button>
+              </div>
+            </div>
+            <div id="takeoff-summary" class="takeoff-summary">
+              <div class="summary-row"><span>Total Distance:</span><strong id="sum-distance" class="mono">0.00</strong></div>
+              <div class="summary-row"><span>Total Perimeter:</span><strong id="sum-perimeter" class="mono">0.00</strong></div>
+              <div class="summary-row"><span>Total Area:</span><strong id="sum-area" class="mono">0.00</strong></div>
+              <div class="summary-row"><span>Total Count:</span><strong id="sum-count" class="mono">0 EA</strong></div>
+            </div>
+            <div id="boq-list" class="boq-list"></div>
+            <div class="boq-footer">
+              <span>Est. Total: <strong id="boq-grand-total" class="mono">$0.00</strong></span>
+              <button id="btn-export-boq" class="btn btn-primary btn-sm" disabled>Export BOQ</button>
             </div>
           </div>
-          <div id="takeoff-summary" class="takeoff-summary">
-            <div class="summary-row"><span>Total Distance:</span><strong id="sum-distance" class="mono">0.00</strong></div>
-            <div class="summary-row"><span>Total Perimeter:</span><strong id="sum-perimeter" class="mono">0.00</strong></div>
-            <div class="summary-row"><span>Total Area:</span><strong id="sum-area" class="mono">0.00</strong></div>
-            <div class="summary-row"><span>Total Count:</span><strong id="sum-count" class="mono">0 EA</strong></div>
-          </div>
-          <div id="boq-list" class="boq-list"></div>
-          <div class="boq-footer">
-            <span>Est. Total: <strong id="boq-grand-total" class="mono">$0.00</strong></span>
-            <button id="btn-export-boq" class="btn btn-primary btn-sm" disabled>Export BOQ</button>
-          </div>
-        </div>
+        </details>
       </aside>
     </main>
   </div>
