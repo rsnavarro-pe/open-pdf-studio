@@ -9,6 +9,7 @@ import { renderCurrentPage } from './pdf-engine.js';
 import { screenToPdf, pdfToScreen, distPt, hitTestMarkup } from './geometry.js';
 import { createSvg, drawMarkupSvg, createWheelZoomHandler } from './overlay-draw.js';
 import { getDefaultMarkupStyle, focusPropTextEditor } from './markup-props.js';
+import { getSearchHighlights } from './search.js';
 
 let svgEl = null;
 let scrollerEl = null;
@@ -281,6 +282,22 @@ export function renderOverlay() {
 
   for (const m of state.markups.filter((x) => x.page === state.currentPage)) {
     drawMarkupSvg(svgEl, m, toScreen, state, m.id === state.selectedId, false);
+  }
+  const { rects: hiRects, activeRect } = getSearchHighlights(state.currentPage);
+  for (const r of hiRects) {
+    const p1 = toScreen({ x: r.x, y: r.y });
+    const p2 = toScreen({ x: r.x + r.w, y: r.y + r.h });
+    const x = Math.min(p1.x, p2.x);
+    const y = Math.min(p1.y, p2.y);
+    const w = Math.max(6, Math.abs(p2.x - p1.x));
+    const h = Math.max(6, Math.abs(p2.y - p1.y));
+    const isAct = activeRect && r === activeRect;
+    svgEl.appendChild(createSvg('rect', {
+      x: x - 2, y: y - 2, width: w + 4, height: h + 4, rx: 2,
+      fill: isAct ? 'rgba(249, 115, 22, 0.34)' : 'rgba(250, 204, 21, 0.30)',
+      stroke: isAct ? '#ea580c' : '#eab308',
+      'stroke-width': isAct ? 2.5 : 1.2,
+    }));
   }
   if (draft) {
     drawMarkupSvg(svgEl, { ...draft, color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor, lineWidth: state.lineWidth }, toScreen, state, false, true);

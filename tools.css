@@ -248,8 +248,10 @@
   padding: 4px 8px;
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
-  width: 220px;
+  width: 240px;
   font-size: 12px;
+  background: var(--bg-panel);
+  color: var(--text-main);
 }
 
 .btn-icon.active {
