@@ -1,0 +1,230 @@
+/**
+ * PdfCraft-inspired Dark Workbench & Left Tool Rail Styling
+ */
+body.craft-dark {
+  --bg-workspace: #18181b;
+  --bg-panel: #1f2024;
+  --bg-header: #141417;
+  --bg-ribbon: #1b1c20;
+  --accent-primary: #4f8ff7;
+  --accent-dark: #f4f4f6;
+  --lcd-bg: #27282e;
+  --lcd-ink: #e4e4e7;
+  --border-subtle: #2e3036;
+  --text-main: #e4e4e7;
+  --text-muted: #9ca3af;
+}
+
+.craft-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  gap: 12px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.craft-top-left, .craft-top-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.craft-top-tabs { display: flex; align-items: center; gap: 4px; }
+.craft-top-tab {
+  background: transparent; border: none; color: #9ca3af; font-family: var(--font-ui);
+  font-size: 13px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer;
+  transition: color 0.14s, background 0.14s;
+}
+.craft-top-tab:hover { color: #ffffff; background: rgba(255, 255, 255, 0.06); }
+.craft-top-tab.active { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
+
+.craft-cmd-search {
+  display: flex; align-items: center; gap: 6px; background: #232429;
+  border: 1px solid #34363e; border-radius: 18px; padding: 3px 10px; min-width: 230px;
+}
+.cmd-search-icon { color: #9ca3af; font-size: 12px; }
+.craft-cmd-search input { background: transparent; border: none; color: #f4f4f6; font-size: 12px; outline: none; flex: 1; }
+.cmd-kbd { font-size: 10px; color: #9ca3af; background: #18181b; padding: 1px 5px; border-radius: 4px; border: 1px solid #34363e; }
+
+/* Dark theme overrides for existing panels */
+body.craft-dark .ribbon-pod { background: #24252a; border-color: #32343c; }
+body.craft-dark .pod-label { border-right-color: #32343c; color: #7aa7f9; }
+body.craft-dark .tool-btn, body.craft-dark .btn-icon { background: #27282e; color: #e4e4e7; border-color: #363842; }
+body.craft-dark .tool-btn:hover, body.craft-dark .btn-icon:hover:not(:disabled) { background: #32343c; }
+body.craft-dark .tool-btn.active { background: #4f8ff7; color: #fff; border-color: #4f8ff7; }
+body.craft-dark .btn-secondary { background: #27282e; color: #e4e4e7; border-color: #383a44; }
+body.craft-dark .btn-secondary:hover { background: #32343d; }
+body.craft-dark .sidebar-right { background: #1c1d21; }
+body.craft-dark .prop-section { background: #24252a; border-color: #32343c; }
+body.craft-dark .prop-section h3 { color: #7aa7f9; }
+body.craft-dark .prop-row select, body.craft-dark .prop-row input { background: #18191c; color: #e4e4e7; border-color: #34363e; }
+body.craft-dark .viewport-area { background: #141417; }
+body.craft-dark .thumb-item, body.craft-dark .markup-item { background: #26272c; border-color: #34363e; }
+
+/* Left "All tools" Rail */
+.craft-rail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+.craft-rail-badge {
+  margin-left: auto;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(79, 143, 247, 0.16);
+  color: #7aa7f9;
+}
+
+.craft-rail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.craft-rail-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-main);
+  font-family: var(--font-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.craft-rail-item:hover { background: rgba(255, 255, 255, 0.06); }
+.craft-rail-ico {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+/* Welcome Center Workbench */
+.craft-welcome {
+  max-width: 980px;
+  width: 100%;
+  margin: 0 auto;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  padding: 12px 24px 32px;
+}
+.craft-welcome-inner { display: flex; flex-direction: column; gap: 18px; }
+.craft-welcome-head h2 { font-size: 24px; font-weight: 700; color: var(--accent-dark); margin-bottom: 4px; }
+.craft-welcome-head p { font-size: 13px; color: var(--text-muted); }
+
+.craft-banner-card {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.craft-banner-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.craft-banner-brand { display: flex; align-items: center; gap: 12px; }
+.craft-banner-icon { width: 32px; height: 32px; border-radius: 6px; }
+.craft-banner-brand strong { font-size: 14px; color: var(--accent-dark); display: block; margin-bottom: 2px; }
+.craft-banner-brand p { font-size: 12px; color: var(--text-muted); }
+.craft-banner-close { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; }
+.craft-banner-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.craft-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-main);
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.craft-pill:hover { border-color: var(--accent-primary); }
+.craft-pill-primary { background: #4f8ff7; border-color: #4f8ff7; color: #fff; }
+.craft-pill-primary:hover { background: #3b7be6; }
+
+/* Recommended Tools Box */
+.craft-rec-box {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.craft-sec-title { font-size: 13px; font-weight: 700; color: var(--accent-dark); }
+.craft-rec-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 10px;
+}
+.craft-rec-card {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.015);
+  transition: border-color 0.14s, transform 0.14s;
+}
+.craft-rec-card:hover { border-color: #4f8ff7; transform: translateY(-1px); }
+.craft-rec-head { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--accent-dark); }
+.craft-rec-card p { font-size: 11px; color: var(--text-muted); line-height: 1.35; flex: 1; }
+.craft-use-link { font-size: 11.5px; font-weight: 600; color: #60a5fa; }
+
+.craft-open-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.craft-open-tile {
+  width: 128px;
+  height: 82px;
+  background: #141518;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #f4f4f6;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+.craft-open-tile:hover { border-color: #4f8ff7; background: #1b1d22; }
+.craft-open-folder { font-size: 20px; }
+
+/* Pinned & Recent Lists */
+.craft-list-section { display: flex; flex-direction: column; gap: 6px; padding-top: 4px; }
+.craft-list-head { display: flex; justify-content: space-between; align-items: center; }
+.craft-list-head h4 { font-size: 14px; font-weight: 700; color: var(--accent-dark); }
+.craft-action-link { background: transparent; border: none; color: var(--text-main); font-size: 12px; font-weight: 600; cursor: pointer; }
+.craft-action-link:hover { color: #60a5fa; }
+.craft-list-sub { font-size: 12px; color: var(--text-muted); }
+.craft-pinned-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; min-height: 26px; }
+.craft-recent-list { display: flex; flex-direction: column; gap: 6px; }
+.craft-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+}
+.craft-recent-item:hover { border-color: #4f8ff7; }

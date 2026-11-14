@@ -10,6 +10,7 @@ import { renderOverlay } from './overlay.js';
 import { renderComparison } from './compare.js';
 import { computeBoqRows } from './takeoff.js';
 import { syncPropsCardFromState } from './markup-props.js';
+import { isWorkbenchForced } from './workbench-ui.js';
 
 const TOOL_HINTS = {
   select: 'Click to select, drag to move, or double-click text/callout to edit.',
@@ -37,8 +38,10 @@ const TOOL_HINTS = {
 
 export function renderUI() {
   const hasDoc = Boolean(state.pdfBytes);
-  document.getElementById('drop-zone').classList.toggle('hidden', hasDoc);
-  document.getElementById('page-stage').classList.toggle('hidden', !hasDoc || (state.compare.active && state.compare.mode === 'side-by-side'));
+  const showBench = !hasDoc || isWorkbenchForced();
+  document.getElementById('drop-zone').classList.toggle('hidden', !showBench);
+  document.getElementById('page-stage').classList.toggle('hidden', showBench || (state.compare.active && state.compare.mode === 'side-by-side'));
+  document.getElementById('btn-home-workbench')?.classList.toggle('active', showBench);
 
   // Tool buttons
   document.querySelectorAll('.tool-btn').forEach((btn) => {

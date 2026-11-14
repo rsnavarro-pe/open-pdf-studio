@@ -19,6 +19,7 @@ import { bindTakeoffEvents } from './takeoff.js';
 import { scheduleAutoSave, restoreLastSession, exportProjectJson, importProjectJson } from './storage.js';
 import { initMarkupProps } from './markup-props.js';
 import { initSignatureModal } from './signature.js';
+import { initWorkbenchUI, recordRecentFile, clearWorkbenchForce } from './workbench-ui.js';
 import { renderUI } from './ui.js';
 
 let pendingCalibratePtSpan = 0;
@@ -37,6 +38,13 @@ async function init() {
   bindKeyboardShortcuts();
   initPdfTools();
   initSignatureModal();
+  initWorkbenchUI(async () => {
+    if (!state.pdfBytes) {
+      const bytes = await generateSamplePdfBytes(false);
+      await loadPdfA(bytes.buffer, 'Sample_FloorPlan_RevA.pdf');
+      recordRecentFile('Sample_FloorPlan_RevA.pdf', state.numPages, bytes.byteLength);
+    }
+  });
   initContextMenu();
   initSearch();
   refreshTakeoffSelectFn = bindTakeoffEvents();
@@ -52,13 +60,18 @@ function bindFileEvents() {
   document.getElementById('pdf-file-input').addEventListener('change', async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    await loadPdfA(await file.arrayBuffer(), file.name);
+    clearWorkbenchForce();
+    const buf = await file.arrayBuffer();
+    await loadPdfA(buf, file.name);
+    recordRecentFile(file.name, state.numPages, buf.byteLength);
     e.target.value = '';
   });
 
   document.getElementById('btn-load-sample').addEventListener('click', async () => {
+    clearWorkbenchForce();
     const bytes = await generateSamplePdfBytes(false);
     await loadPdfA(bytes.buffer, 'Sample_FloorPlan_RevA.pdf');
+    recordRecentFile('Sample_FloorPlan_RevA.pdf', state.numPages, bytes.byteLength);
   });
 
   document.getElementById('btn-export-pdf').addEventListener('click', exportAnnotatedPdf);
@@ -106,7 +119,10 @@ function bindFileEvents() {
 function bindToolEvents() {
   document.querySelectorAll('.tool-btn').forEach((btn) => {
     if (btn.id === 'btn-sign-tool') return;
-    btn.addEventListener('click', () => setTool(btn.dataset.tool));
+    btn.addEventListener('click', () => {
+      clearWorkbenchForce();
+      setTool(btn.dataset.tool);
+    });
   });
 
   document.querySelectorAll('.tab-btn').forEach((btn) => {

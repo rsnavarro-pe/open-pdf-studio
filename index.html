@@ -7,6 +7,7 @@
   <link rel="icon" type="image/svg+xml" href="assets/rsn-logo.svg" />
   <link rel="stylesheet" href="styles.css" />
   <link rel="stylesheet" href="tools.css" />
+  <link rel="stylesheet" href="workbench.css" />
   <!-- PDF.js, pdf-lib, Tesseract OCR & Client-Side Conversion Libraries (zero-build CDN) -->
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
@@ -16,39 +17,44 @@
   <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 </head>
-<body>
+<body class="craft-dark">
   <div id="app" class="studio-shell">
     <!-- Top Header & Toolbar -->
     <header class="studio-header">
-      <div class="brand-bar">
-        <div class="brand-title">
-          <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="brand-logo" />
-          <h1>RSN PDF Studio</h1>
-        </div>
-        <div class="file-actions">
-          <label class="btn btn-primary" for="pdf-file-input">Open PDF</label>
-          <input id="pdf-file-input" type="file" accept="application/pdf" hidden />
-          <button id="btn-load-sample" class="btn btn-secondary" title="Generate & open a sample architectural floor plan">Sample Plan</button>
-          <button id="btn-pdf-tools" class="btn btn-secondary" title="Merge, Split, Compress & Convert PDFs">PDF Tools</button>
-          <button id="btn-export-pdf" class="btn btn-accent" disabled>Export PDF</button>
-          <button id="btn-export-dxf" class="btn btn-secondary" disabled title="Quick export current page to AutoCAD DXF">Export DXF</button>
-          <button id="btn-export-csv" class="btn btn-secondary" disabled>Export CSV</button>
-          <button id="btn-save-project" class="btn btn-secondary" disabled title="Save markups, scale & BOQ (.rsn.json)">Save Proj</button>
-          <label class="btn btn-secondary" for="project-file-input" title="Load .rsn.json project onto open PDF">Load Proj</label>
-          <input id="project-file-input" type="file" accept=".json,.rsn.json,application/json" hidden />
-        </div>
-        <div class="lcd-cluster">
-          <div class="lcd-readout" title="Active Scale">
-            <span class="lcd-label">SCALE</span>
-            <span id="lcd-scale" class="lcd-value">Not Set</span>
+      <div class="craft-topbar">
+        <div class="craft-top-left">
+          <div class="brand-title">
+            <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="brand-logo" />
+            <h1>RSN PDF Studio</h1>
           </div>
-          <div class="lcd-readout" title="Cursor Coordinates">
-            <span class="lcd-label">XY</span>
-            <span id="lcd-coords" class="lcd-value">0.0, 0.0</span>
+          <nav class="craft-top-tabs" aria-label="Workbench Categories">
+            <button type="button" class="craft-top-tab active" data-top-cat="all">All tools</button>
+            <button type="button" class="craft-top-tab" data-top-cat="edit">Edit</button>
+            <button type="button" class="craft-top-tab" data-top-cat="convert">Convert</button>
+            <button type="button" class="craft-top-tab" data-top-cat="esign">E-Sign</button>
+            <button type="button" class="craft-top-tab" data-top-cat="measure">Measure &amp; CAD</button>
+            <button type="button" id="btn-home-workbench" class="craft-top-tab" title="Toggle Welcome Workbench / Active Drawing">⌂ Workbench</button>
+          </nav>
+        </div>
+
+        <div class="craft-top-right">
+          <div class="craft-cmd-search">
+            <span class="cmd-search-icon">⌕</span>
+            <input id="global-cmd-search" type="search" placeholder="Find tools and commands" autocomplete="off" />
+            <kbd class="cmd-kbd">⌘K</kbd>
           </div>
-          <div class="lcd-readout" title="Zoom Level">
-            <span class="lcd-label">ZOOM</span>
-            <span id="lcd-zoom" class="lcd-value">100%</span>
+          <div class="file-actions">
+            <label class="btn btn-primary btn-sm" for="pdf-file-input">Open PDF</label>
+            <input id="pdf-file-input" type="file" accept="application/pdf" hidden />
+            <button id="btn-load-sample" class="btn btn-secondary btn-sm" title="Generate & open a sample architectural floor plan">Sample Plan</button>
+            <button id="btn-pdf-tools" class="btn btn-secondary btn-sm" title="Open All-in-One PDF Tool Hub">Tool Hub</button>
+            <button id="btn-export-pdf" class="btn btn-accent btn-sm" disabled title="Save / Export Annotated PDF">💾 Export PDF</button>
+            <button id="btn-export-dxf" class="btn btn-secondary btn-sm" disabled title="Quick export current page to AutoCAD DXF">DXF</button>
+            <button id="btn-export-csv" class="btn btn-secondary btn-sm" disabled title="Export Takeoff CSV">CSV</button>
+            <button id="btn-save-project" class="btn btn-secondary btn-sm" disabled title="Save markups, scale & BOQ (.rsn.json)">Save Proj</button>
+            <label class="btn btn-secondary btn-sm" for="project-file-input" title="Load .rsn.json project onto open PDF">Load Proj</label>
+            <input id="project-file-input" type="file" accept=".json,.rsn.json,application/json" hidden />
+            <button id="btn-theme-toggle" class="btn-icon btn-sm" title="Toggle Dark Workbench / Light Editorial Theme">☀</button>
           </div>
         </div>
       </div>
@@ -98,16 +104,30 @@
         <div class="ribbon-pod">
           <span class="pod-label">EDIT &amp; VIEW</span>
           <div class="tool-group">
-            <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" disabled>↶ Undo</button>
-            <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" disabled>↷ Redo</button>
-            <button id="btn-delete-selected" class="btn-icon" title="Delete Selected (Del)" disabled>✕ Del</button>
+            <button id="btn-undo" class="btn-icon" title="Undo (Ctrl+Z)" disabled>↶</button>
+            <button id="btn-redo" class="btn-icon" title="Redo (Ctrl+Y)" disabled>↷</button>
+            <button id="btn-delete-selected" class="btn-icon" title="Delete Selected (Del)" disabled>✕</button>
             <button id="btn-zoom-out" class="btn-icon" title="Zoom Out">−</button>
             <button id="btn-zoom-fit" class="btn-icon" title="Fit Width">Fit</button>
             <button id="btn-zoom-in" class="btn-icon" title="Zoom In">+</button>
-            <button id="btn-rotate" class="btn-icon" title="Rotate 90°">↻ 90°</button>
+            <button id="btn-rotate" class="btn-icon" title="Rotate 90°">↻</button>
             <button id="btn-osnap" class="btn-icon active" title="Toggle CAD Object Snap (endpoints/corners)">OSNAP</button>
-            <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>⌕ Find</button>
-            <button id="btn-compare-toggle" class="btn btn-compare" title="Compare Two PDF Revisions">⇄ Compare</button>
+            <button id="btn-find" class="btn-icon" title="Find Text (Ctrl+F)" disabled>⌕</button>
+            <button id="btn-compare-toggle" class="btn btn-compare btn-sm" title="Compare Two PDF Revisions">⇄ Compare</button>
+          </div>
+        </div>
+        <div class="lcd-cluster" style="margin-left:auto">
+          <div class="lcd-readout" title="Active Scale">
+            <span class="lcd-label">SCALE</span>
+            <span id="lcd-scale" class="lcd-value">Not Set</span>
+          </div>
+          <div class="lcd-readout" title="Cursor Coordinates">
+            <span class="lcd-label">XY</span>
+            <span id="lcd-coords" class="lcd-value">0.0, 0.0</span>
+          </div>
+          <div class="lcd-readout" title="Zoom Level">
+            <span class="lcd-label">ZOOM</span>
+            <span id="lcd-zoom" class="lcd-value">100%</span>
           </div>
         </div>
       </nav>
@@ -115,14 +135,23 @@
 
     <!-- Main 3-Column Workspace -->
     <main class="studio-workspace">
-      <!-- Left Sidebar: Thumbnails & Markup List -->
+      <!-- Left Sidebar: All Tools Rail + Pages / Outline / Markups -->
       <aside class="sidebar-left">
         <div class="sidebar-tabs">
-          <button class="tab-btn active" data-tab="pages">Pages</button>
+          <button class="tab-btn active" data-tab="alltools">All tools</button>
+          <button class="tab-btn" data-tab="pages">Pages</button>
           <button class="tab-btn" data-tab="bookmarks">Outline</button>
           <button class="tab-btn" data-tab="markups">Markups (<span id="markup-count">0</span>)</button>
         </div>
-        <div id="panel-pages" class="tab-panel active">
+        <div id="panel-alltools" class="tab-panel active">
+          <div class="craft-rail-header">
+            <span>↗</span>
+            <strong>All tools</strong>
+            <span id="craft-rail-filter-badge" class="craft-rail-badge">All</span>
+          </div>
+          <div id="craft-rail-list" class="craft-rail-list"></div>
+        </div>
+        <div id="panel-pages" class="tab-panel">
           <div id="thumbnails-list" class="thumbnails-list">
             <p class="empty-hint">Open a PDF or load the Sample Plan.</p>
           </div>
@@ -169,39 +198,117 @@
         </div>
 
         <div id="canvas-scroller" class="canvas-scroller">
-          <div id="drop-zone" class="drop-zone">
-            <div class="drop-card">
-              <div class="launchpad-eyebrow">100% CLIENT-SIDE AEC &amp; PDF WORKBENCH</div>
-              <img src="assets/rsn-logo.svg" alt="RSN PDF Studio" class="drop-logo" />
-              <h2>RSN PDF Studio</h2>
-              <p>Drop a PDF or CAD drawing anywhere here, or launch a workspace below.</p>
-              <div class="launchpad-cta">
-                <label class="btn btn-primary" for="pdf-file-input">Open PDF Drawing</label>
-                <button type="button" class="btn btn-secondary" onclick="document.getElementById('btn-load-sample').click()">Load Sample Floor Plan</button>
-                <button type="button" class="btn btn-secondary" data-open-hub="all">Explore 16+ PDF Tools</button>
+          <div id="drop-zone" class="drop-zone craft-welcome">
+            <div class="craft-welcome-inner">
+              <header class="craft-welcome-head">
+                <h2>Welcome to RSN PDF Studio</h2>
+                <p>An open-source PDF &amp; CAD engineering workbench — local, private, and scriptable.</p>
+              </header>
+
+              <!-- Hero Banner Card -->
+              <div id="craft-hero-banner" class="craft-banner-card">
+                <div class="craft-banner-top">
+                  <div class="craft-banner-brand">
+                    <img src="assets/rsn-logo.svg" alt="RSN" class="craft-banner-icon" />
+                    <div>
+                      <strong>RSN Engineering &amp; PDF Workbench</strong>
+                      <p>100% browser-local PDF editing, multi-leader CAD callouts, DWG/DXF conversion, and automated workflows.</p>
+                    </div>
+                  </div>
+                  <button type="button" id="btn-dismiss-banner" class="craft-banner-close" title="Dismiss">✕</button>
+                </div>
+                <div class="craft-banner-pills">
+                  <button type="button" class="craft-pill craft-pill-primary" data-open-hub="all">⚡ Open PDF Tool Hub</button>
+                  <button type="button" class="craft-pill" onclick="document.getElementById('btn-load-sample').click()">📐 Load Sample Floor Plan</button>
+                  <button type="button" class="craft-pill" data-open-hub="dwg-to-pdf">🔄 DWG / DXF Converter</button>
+                  <button type="button" class="craft-pill" data-open-hub="pipeline-pdf">⚙ Guided Workflows</button>
+                </div>
               </div>
-              <div class="launchpad-tiles">
-                <button type="button" class="launch-tile" data-open-hub="ORGANIZE">
-                  <span class="tile-tag">ORGANIZE</span>
-                  <strong>Merge, Split &amp; Reorder</strong>
-                  <span>By pages, size, interleave, or N-Up</span>
-                </button>
-                <button type="button" class="launch-tile" data-open-hub="OPTIMIZE">
-                  <span class="tile-tag">OPTIMIZE</span>
-                  <strong>Compress &amp; Grayscale</strong>
-                  <span>Low/Med/High presets with size estimate</span>
-                </button>
-                <button type="button" class="launch-tile" data-open-hub="CAD">
-                  <span class="tile-tag">CAD &amp; DATA</span>
-                  <strong>DWG / DXF ↔ PDF &amp; CSV</strong>
-                  <span>Bidirectional CAD &amp; table extraction</span>
-                </button>
-                <button type="button" class="launch-tile" data-open-hub="SECURITY">
-                  <span class="tile-tag">SECURITY &amp; FORMS</span>
-                  <strong>Unlock, Forms &amp; Privacy</strong>
-                  <span>Decrypt, fill AcroForms &amp; strip metadata</span>
-                </button>
-              </div>
+
+              <!-- Recommended Tools Container -->
+              <section class="craft-rec-box">
+                <h3 class="craft-sec-title">Recommended tools</h3>
+                <div class="craft-rec-grid">
+                  <div class="craft-rec-card" data-open-hub="org-pages">
+                    <div class="craft-rec-head">
+                      <span class="craft-ico" style="color:#4ade80">⊞</span>
+                      <strong>Organize pages</strong>
+                    </div>
+                    <p>Page grid · Rotate · Delete · Split &amp; Extract</p>
+                    <span class="craft-use-link">Use now</span>
+                  </div>
+                  <div class="craft-rec-card" data-wb-tool="callout">
+                    <div class="craft-rec-head">
+                      <span class="craft-ico" style="color:#facc15">💬</span>
+                      <strong>Add comments</strong>
+                    </div>
+                    <p>Sticky note · Highlight text · Multi-leader Callout</p>
+                    <span class="craft-use-link">Use now</span>
+                  </div>
+                  <div class="craft-rec-card" data-open-hub="forms-pdf">
+                    <div class="craft-rec-head">
+                      <span class="craft-ico" style="color:#a855f7">⌸</span>
+                      <strong>Prepare a form</strong>
+                    </div>
+                    <p>Field list · Detect &amp; fill AcroForms · Flatten form</p>
+                    <span class="craft-use-link">Use now</span>
+                  </div>
+                  <div class="craft-rec-card" data-wb-tool="text">
+                    <div class="craft-rec-head">
+                      <span class="craft-ico" style="color:#ec4899">✎</span>
+                      <strong>Edit a PDF</strong>
+                    </div>
+                    <p>Edit text &amp; fonts · Multi-leader arrows · Rev clouds</p>
+                    <span class="craft-use-link">Use now</span>
+                  </div>
+                  <div class="craft-rec-card" data-open-hub="security">
+                    <div class="craft-rec-head">
+                      <span class="craft-ico" style="color:#38bdf8">🛡</span>
+                      <strong>Protect a PDF</strong>
+                    </div>
+                    <p>Unlock password · Watermark · Scrub hidden metadata</p>
+                    <span class="craft-use-link">Use now</span>
+                  </div>
+                </div>
+
+                <div class="craft-open-row">
+                  <label for="pdf-file-input" class="craft-open-tile">
+                    <span class="craft-open-folder">📁</span>
+                    <strong>Open file</strong>
+                  </label>
+                  <button type="button" class="craft-open-tile" onclick="document.getElementById('btn-load-sample').click()">
+                    <span class="craft-open-folder">📐</span>
+                    <strong>Sample Plan</strong>
+                  </button>
+                </div>
+              </section>
+
+              <!-- Pinned Tools -->
+              <section class="craft-list-section">
+                <div class="craft-list-head">
+                  <h4>Pinned Tools</h4>
+                  <button type="button" id="btn-pin-tool" class="craft-action-link">📌 Pin a tool...</button>
+                </div>
+                <div id="craft-pinned-list" class="craft-pinned-row"></div>
+              </section>
+
+              <!-- Folders / Project Workspace -->
+              <section class="craft-list-section">
+                <div class="craft-list-head">
+                  <h4>Project Workspace</h4>
+                  <label for="project-file-input" class="craft-action-link" style="cursor:pointer">📂 Open .rsn.json project...</label>
+                </div>
+                <p class="craft-list-sub">Drop any PDF drawing or saved <code>.rsn.json</code> takeoff package onto this window to open it immediately.</p>
+              </section>
+
+              <!-- Recent Files -->
+              <section class="craft-list-section">
+                <div class="craft-list-head">
+                  <h4>Recent</h4>
+                  <button type="button" id="btn-clear-recent" class="craft-action-link">🗑 Clear</button>
+                </div>
+                <div id="craft-recent-list" class="craft-recent-list"></div>
+              </section>
             </div>
           </div>
 
