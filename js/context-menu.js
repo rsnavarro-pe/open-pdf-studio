@@ -2,7 +2,7 @@
  * Right-click context menu for fast mouse operation on the PDF canvas.
  */
 import { state, setTool, undo, deleteSelectedMarkup, notify } from './state.js';
-import { renderCurrentPage, fitPageWidth } from './pdf-engine.js';
+import { renderCurrentPage, fitPageWidth, fitWholePage } from './pdf-engine.js';
 import { exportAnnotatedPdf } from './exporter.js';
 import { exportPdfToDxf } from './pdf-to-dxf.js';
 import { hitTestMarkup, screenToPdf } from './geometry.js';
@@ -63,9 +63,11 @@ function buildMenuItems(menu, scroller, closeMenu) {
     { label: 'Callout (L)', action: () => setTool('callout') },
     { label: 'Stamp Tool', action: () => setTool('stamp') },
     { sep: true },
-    { label: 'Zoom In (+)', action: async () => { state.zoom = Math.min(4, +(state.zoom + 0.2).toFixed(2)); await renderCurrentPage(); } },
-    { label: 'Zoom Out (-)', action: async () => { state.zoom = Math.max(0.25, +(state.zoom - 0.2).toFixed(2)); await renderCurrentPage(); } },
-    { label: 'Fit Width', action: async () => { await fitPageWidth(scroller); } },
+    { label: 'Zoom In (+)', action: async () => { state.zoom = Math.min(12, +(state.zoom * 1.25).toFixed(3)); await renderCurrentPage(); } },
+    { label: 'Zoom Out (-)', action: async () => { state.zoom = Math.max(0.15, +(state.zoom / 1.25).toFixed(3)); await renderCurrentPage(); } },
+    { label: 'Zoom to Region (Z)', action: () => setTool('zoombox') },
+    { label: 'Fit Width (0)', action: async () => { await fitPageWidth(scroller); } },
+    { label: 'Fit Whole Page', action: async () => { await fitWholePage(scroller); } },
     { label: 'Rotate 90°', action: async () => { state.rotation = (state.rotation + 90) % 360; await renderCurrentPage(); } },
     { sep: true },
     { label: 'Undo (Ctrl+Z)', disabled: state.undoStack.length === 0, action: undo },

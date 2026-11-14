@@ -98,19 +98,20 @@ export function drawMarkupSvg(svgEl, m, toScreen, state, isSelected, isDraft = f
       'stroke-opacity': isHi ? '0.4' : '1',
       'stroke-linecap': 'round', 'stroke-linejoin': 'round',
     }));
-  } else if (m.type === 'rect' || m.type === 'redact') {
+  } else if (m.type === 'rect' || m.type === 'redact' || m.type === 'zoombox') {
     const [a, b] = pts;
     const isRed = m.type === 'redact';
+    const isZoom = m.type === 'zoombox';
     const rx = Math.min(a.x, b.x);
     const ry = Math.min(a.y, b.y);
     const rw = Math.abs(b.x - a.x);
     const rh = Math.abs(b.y - a.y);
     g.appendChild(createSvg('rect', {
       x: rx, y: ry, width: rw, height: rh,
-      fill: isRed ? '#111111' : fillCol,
-      'fill-opacity': isRed ? '0.88' : fillOp,
-      stroke: isRed ? (isSelected ? '#0ea5e9' : '#c0392b') : stroke,
-      'stroke-width': sw, 'stroke-dasharray': isRed ? '' : dash,
+      fill: isZoom ? '#4f8ff7' : (isRed ? '#111111' : fillCol),
+      'fill-opacity': isZoom ? '0.14' : (isRed ? '0.88' : fillOp),
+      stroke: isZoom ? '#4f8ff7' : (isRed ? (isSelected ? '#0ea5e9' : '#c0392b') : stroke),
+      'stroke-width': isZoom ? 1.8 : sw, 'stroke-dasharray': isZoom ? '6,4' : (isRed ? '' : dash),
     }));
     if (isRed && rw > 44 && rh > 16) {
       const rt = createSvg('text', { x: rx + rw / 2, y: ry + rh / 2 + 4, 'text-anchor': 'middle', fill: '#fca5a5', 'font-size': 10, 'font-weight': '700' });
@@ -231,7 +232,7 @@ export function createWheelZoomHandler(scrollerEl, state, renderOverlay, renderC
       const stage = document.getElementById('page-stage');
       const canvas = document.getElementById('pdf-canvas');
       const prevZoom = state.zoom;
-      const nextZoom = Math.max(0.15, Math.min(6, +(prevZoom * Math.exp(-d * 0.0022)).toFixed(4)));
+      const nextZoom = Math.max(0.15, Math.min(12, +(prevZoom * Math.exp(-d * 0.0022)).toFixed(4)));
       if (nextZoom === prevZoom) return;
 
       const stageRect = stage.getBoundingClientRect();

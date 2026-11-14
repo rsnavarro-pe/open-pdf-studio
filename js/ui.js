@@ -11,10 +11,12 @@ import { renderComparison } from './compare.js';
 import { computeBoqRows } from './takeoff.js';
 import { syncPropsCardFromState } from './markup-props.js';
 import { isWorkbenchForced, isInspectorCollapsed } from './workbench-ui.js';
+import { hasZoomHistory } from './pdf-engine.js';
 
 const TOOL_HINTS = {
-  select: 'Click to select, drag to move, or double-click text/callout to edit.',
-  pan: 'Click and drag to pan the drawing.',
+  select: 'Click to select, drag to move, or Shift+Drag to zoom into any region.',
+  pan: 'Click and drag to pan the drawing (or Shift+Drag to zoom into a region).',
+  zoombox: 'Click and drag a box around any region on the sheet to zoom into it.',
   calibrate: 'Click and drag between two points of a known dimension.',
   distance: 'Click and drag to measure a straight-line distance.',
   perimeter: 'Click points to trace a polyline; double-click or right-click to finish (Esc to cancel).',
@@ -67,6 +69,13 @@ export function renderUI() {
   document.getElementById('btn-delete-selected').disabled = !state.selectedId;
   document.getElementById('btn-prev-page').disabled = !hasDoc || state.currentPage <= 1;
   document.getElementById('btn-next-page').disabled = !hasDoc || state.currentPage >= state.numPages;
+  const zBack = document.getElementById('btn-zoom-back');
+  if (zBack) zBack.disabled = !hasDoc || !hasZoomHistory();
+  const zSel = document.getElementById('zoom-preset-select');
+  if (zSel) {
+    const closest = [...zSel.options].reduce((a, b) => Math.abs(Number(b.value) - state.zoom) < Math.abs(Number(a.value) - state.zoom) ? b : a);
+    if (Math.abs(Number(closest.value) - state.zoom) < 0.03) zSel.value = closest.value;
+  }
 
   // LCD Readouts & Status
   document.getElementById('lcd-scale').textContent = state.scaleLabel;

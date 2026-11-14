@@ -5,7 +5,7 @@ import { state, addMarkup, pushHistory, setTool, notify } from './state.js';
 import { buildStampPayload } from './stamps.js';
 import { nextCountNumber } from './takeoff.js';
 import { findNearestSnap } from './osnap.js';
-import { renderCurrentPage } from './pdf-engine.js';
+import { renderCurrentPage, zoomToRegion } from './pdf-engine.js';
 import { screenToPdf, pdfToScreen, distPt, hitTestMarkup } from './geometry.js';
 import { createSvg, drawMarkupSvg, createWheelZoomHandler } from './overlay-draw.js';
 import { getDefaultMarkupStyle, focusPropTextEditor } from './markup-props.js';
@@ -75,6 +75,12 @@ function onPointerDown(e) {
 
   const tool = state.activeTool;
   const pt = getPdfPointFromEvent(e);
+
+  if (tool === 'zoombox' || (e.shiftKey && ['select', 'pan'].includes(tool))) {
+    draft = { type: 'zoombox', points: [pt, pt], oneShotReturn: tool !== 'zoombox' };
+    renderOverlay();
+    return;
+  }
 
   if (state.addingLeaderToId) {
     const target = state.markups.find((m) => m.id === state.addingLeaderToId && m.page === state.currentPage);
@@ -228,6 +234,11 @@ function onPointerUp() {
   const span = distPt(p0, p1);
   const type = draft.type;
   draft = null;
+  if (type === 'zoombox') {
+    renderOverlay();
+    if (span >= 8) zoomToRegion(p0, p1, scrollerEl);
+    return;
+  }
   if (type === 'sign') {
     if (!state.signatureDataUrl) { renderOverlay(); return; }
     const endPt = span < 8 ? { x: p0.x + 130, y: p0.y + 52 } : p1;

@@ -4,6 +4,7 @@
 import { state, clearDocumentState, notify } from './state.js';
 import { extractPageSnapPoints } from './osnap.js';
 import { transformPdfPages } from './page-org.js';
+import { pdfToScreen } from './geometry.js';
 
 const WORKER_URL = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
 
@@ -12,6 +13,7 @@ let pdfDocB = null;
 let activeRenderTask = null;
 let renderSeq = 0;
 let snapCache = new Map();
+const zoomHistory = [];
 
 export function initPdfEngine() {
   if (window.pdfjsLib) {
@@ -125,8 +127,59 @@ export async function fitPageWidth(scrollerEl) {
   const page = await pdfDocA.getPage(state.currentPage);
   const vp = page.getViewport({ scale: 1, rotation: state.rotation });
   const availW = Math.max(300, scrollerEl.clientWidth - 48);
-  state.zoom = Math.max(0.25, Math.min(4, availW / vp.width));
+  state.zoom = Math.max(0.25, Math.min(12, availW / vp.width));
   await renderCurrentPage();
+}
+
+export async function fitWholePage(scrollerEl) {
+  if (!pdfDocA) return;
+  const page = await pdfDocA.getPage(state.currentPage);
+  const vp = page.getViewport({ scale: 1, rotation: state.rotation });
+  const availW = Math.max(240, scrollerEl.clientWidth - 48);
+  const availH = Math.max(240, scrollerEl.clientHeight - 48);
+  state.zoom = Math.max(0.15, Math.min(12, Math.min(availW / vp.width, availH / vp.height)));
+  await renderCurrentPage();
+}
+
+export function hasZoomHistory() {
+  return zoomHistory.length > 0;
+}
+
+export async function popZoomHistory(scrollerEl) {
+  if (!zoomHistory.length || !pdfDocA) return;
+  const prev = zoomHistory.pop();
+  state.zoom = prev.zoom;
+  await renderCurrentPage();
+  if (scrollerEl) {
+    scrollerEl.scrollLeft = prev.scrollLeft;
+    scrollerEl.scrollTop = prev.scrollTop;
+  }
+}
+
+export async function zoomToRegion(p0, p1, scrollerEl) {
+  if (!pdfDocA || !scrollerEl) return;
+  const dx = Math.abs(p1.x - p0.x);
+  const dy = Math.abs(p1.y - p0.y);
+  if (dx < 6 || dy < 6) return;
+
+  zoomHistory.push({ zoom: state.zoom, scrollLeft: scrollerEl.scrollLeft, scrollTop: scrollerEl.scrollTop });
+  if (zoomHistory.length > 20) zoomHistory.shift();
+
+  const isSwap = state.rotation % 180 === 90;
+  const regW = isSwap ? dy : dx;
+  const regH = isSwap ? dx : dy;
+  const availW = Math.max(200, scrollerEl.clientWidth - 36);
+  const availH = Math.max(200, scrollerEl.clientHeight - 36);
+  state.zoom = Math.max(0.25, Math.min(12, Math.min(availW / regW, availH / regH) * 0.94));
+  await renderCurrentPage();
+
+  const mid = { x: (p0.x + p1.x) / 2, y: (p0.y + p1.y) / 2 };
+  const sp = pdfToScreen(mid.x, mid.y, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
+  const stage = document.getElementById('page-stage');
+  const stageRect = stage.getBoundingClientRect();
+  const scrollerRect = scrollerEl.getBoundingClientRect();
+  scrollerEl.scrollLeft += (stageRect.left + sp.x) - (scrollerRect.left + scrollerEl.clientWidth / 2);
+  scrollerEl.scrollTop += (stageRect.top + sp.y) - (scrollerRect.top + scrollerEl.clientHeight / 2);
 }
 
 export async function renderAllThumbnails() {

@@ -6,7 +6,7 @@ import {
   deleteSelectedMarkup, setPresetScale, convertUnit,
 } from './state.js';
 import {
-  loadPdfA, loadPdfB, renderCurrentPage, fitPageWidth,
+  loadPdfA, loadPdfB, renderCurrentPage, fitPageWidth, fitWholePage, popZoomHistory,
 } from './pdf-engine.js';
 import { generateSamplePdfBytes } from './sample-pdf.js';
 import { initOverlay } from './overlay.js';
@@ -152,15 +152,25 @@ function bindNavigationEvents() {
     if (state.currentPage < state.numPages) { state.currentPage++; await renderCurrentPage(); }
   });
   document.getElementById('btn-zoom-in').addEventListener('click', async () => {
-    state.zoom = Math.min(4, +(state.zoom + 0.2).toFixed(2));
+    state.zoom = Math.min(12, +(state.zoom * 1.25).toFixed(3));
     await renderCurrentPage();
   });
   document.getElementById('btn-zoom-out').addEventListener('click', async () => {
-    state.zoom = Math.max(0.25, +(state.zoom - 0.2).toFixed(2));
+    state.zoom = Math.max(0.15, +(state.zoom / 1.25).toFixed(3));
     await renderCurrentPage();
+  });
+  document.getElementById('zoom-preset-select')?.addEventListener('change', async (e) => {
+    const val = Number(e.target.value);
+    if (val > 0) { state.zoom = val; await renderCurrentPage(); }
+  });
+  document.getElementById('btn-zoom-back')?.addEventListener('click', async () => {
+    await popZoomHistory(document.getElementById('canvas-scroller'));
   });
   document.getElementById('btn-zoom-fit').addEventListener('click', async () => {
     await fitPageWidth(document.getElementById('canvas-scroller'));
+  });
+  document.getElementById('btn-zoom-fit-page')?.addEventListener('click', async () => {
+    await fitWholePage(document.getElementById('canvas-scroller'));
   });
   document.getElementById('btn-rotate').addEventListener('click', async () => {
     state.rotation = (state.rotation + 90) % 360;
@@ -229,12 +239,16 @@ function bindCalibrationModal() {
 }
 
 function bindKeyboardShortcuts() {
-  const map = { v: 'select', h: 'pan', m: 'distance', p: 'perimeter', a: 'area', k: 'count', c: 'cloud', l: 'callout', t: 'text' };
-  window.addEventListener('keydown', (e) => {
+  const map = { v: 'select', h: 'pan', z: 'zoombox', m: 'distance', p: 'perimeter', a: 'area', k: 'count', c: 'cloud', l: 'callout', t: 'text' };
+  window.addEventListener('keydown', async (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { e.preventDefault(); undo(); return; }
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { e.preventDefault(); redo(); return; }
     if (e.key === 'Delete' || e.key === 'Backspace') { deleteSelectedMarkup(); return; }
+    if (e.key === '=' || e.key === '+') { state.zoom = Math.min(12, +(state.zoom * 1.25).toFixed(3)); await renderCurrentPage(); return; }
+    if (e.key === '-') { state.zoom = Math.max(0.15, +(state.zoom / 1.25).toFixed(3)); await renderCurrentPage(); return; }
+    if (e.key === '0') { await fitPageWidth(document.getElementById('canvas-scroller')); return; }
+    if (e.key === '1') { state.zoom = 1; await renderCurrentPage(); return; }
     const tool = map[e.key.toLowerCase()];
     if (tool) setTool(tool);
   });
