@@ -65,7 +65,7 @@ export function initPdfTools() {
   };
   document.getElementById('tool-split-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runSplit(state.pdfBytes.buffer, state.pdfName);
+    runSplit(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-split-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -110,7 +110,7 @@ export function initPdfTools() {
   });
   document.getElementById('tool-compress-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runCompress(state.pdfBytes.buffer, state.pdfName);
+    runCompress(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-compress-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -134,7 +134,7 @@ export function initPdfTools() {
   };
   document.getElementById('tool-pdf2img-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runPdf2Img(state.pdfBytes.buffer, state.pdfName);
+    runPdf2Img(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-pdf2img-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -151,7 +151,7 @@ export function initPdfTools() {
   };
   document.getElementById('tool-pdf2office-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runOffice(state.pdfBytes.buffer, state.pdfName);
+    runOffice(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-pdf2office-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -174,7 +174,7 @@ export function initPdfTools() {
   };
   document.getElementById('tool-ocr-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runOcr(state.pdfBytes.buffer, state.pdfName);
+    runOcr(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-ocr-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -191,7 +191,7 @@ export function initPdfTools() {
   };
   document.getElementById('tool-pdf2dxf-current').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runPdf2Dxf(state.pdfBytes.buffer, state.pdfName);
+    runPdf2Dxf(state.pdfBytes.slice().buffer, state.pdfName);
   });
   document.getElementById('tool-pdf2dxf-input').addEventListener('change', async (e) => {
     const f = e.target.files?.[0];

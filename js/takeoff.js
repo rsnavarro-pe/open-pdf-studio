@@ -85,11 +85,17 @@ export function computeBoqRows() {
 
     row.qty += delta;
     if (row.depth > 0) {
-      if (m.type === 'area') row.volOrWall += delta * row.depth;
+      if (m.type === 'area' || m.type === 'cutout') row.volOrWall += delta * row.depth;
       else if (m.type === 'perimeter' || m.type === 'distance') row.volOrWall += delta * row.depth;
       else if (m.type === 'count') void polygonPerimeter;
     }
-    row.extCost = row.qty * (Number(row.unitCost) || 0);
+    row.extCost = Math.max(0, row.qty) * (Number(row.unitCost) || 0);
+  }
+
+  for (const r of map.values()) {
+    r.qty = Math.max(0, r.qty);
+    r.volOrWall = Math.max(0, r.volOrWall);
+    r.extCost = r.qty * (Number(r.unitCost) || 0);
   }
 
   const rows = [...map.values()].filter((r) => r.hits > 0 || state.takeoffItems.some((i) => i.id === r.id));

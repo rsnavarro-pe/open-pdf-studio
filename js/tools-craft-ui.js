@@ -23,7 +23,7 @@ import { applyBatesAndWatermark } from './page-org.js';
 function bindCurrentAndFile(prefix, handler, setStatus, runSafe, requireOpenPdf) {
   document.getElementById(`${prefix}-current`).addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runSafe(setStatus, () => handler(state.pdfBytes.buffer, state.pdfName));
+    runSafe(setStatus, () => handler(state.pdfBytes.slice().buffer, state.pdfName));
   });
   document.getElementById(`${prefix}-input`).addEventListener('change', async (e) => {
     const f = e.target.files?.[0];
@@ -70,7 +70,7 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
   const loadMeta = async () => {
     if (!state.pdfBytes) return;
     try {
-      const m = await readPdfMetadata(state.pdfBytes.buffer);
+      const m = await readPdfMetadata(state.pdfBytes.slice().buffer);
       document.getElementById('tool-meta-title').value = m.title;
       document.getElementById('tool-meta-author').value = m.author;
       document.getElementById('tool-meta-subject').value = m.subject;
@@ -81,7 +81,7 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
 
   const runMeta = (action) => {
     if (!requireOpenPdf(setStatus)) return;
-    return runSafe(setStatus, () => editMetadataPdf(state.pdfBytes.buffer, state.pdfName, {
+    return runSafe(setStatus, () => editMetadataPdf(state.pdfBytes.slice().buffer, state.pdfName, {
       action,
       title: document.getElementById('tool-meta-title').value,
       author: document.getElementById('tool-meta-author').value,
@@ -124,23 +124,23 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
       formArea.placeholder = list.length ? '' : 'No interactive AcroForm fields detected in this PDF.';
     } catch (_) { /* ignore */ }
   };
-  document.getElementById('btn-pdf-tools').addEventListener('click', () => loadFormFields(state.pdfBytes?.buffer));
+  document.getElementById('btn-pdf-tools').addEventListener('click', () => loadFormFields(state.pdfBytes?.slice().buffer));
   document.getElementById('tool-form-fill').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.buffer, state.pdfName, formArea.value, false, setStatus));
+    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.slice().buffer, state.pdfName, formArea.value, false, setStatus));
   });
   document.getElementById('tool-form-flatten').addEventListener('click', () => {
     if (!requireOpenPdf(setStatus)) return;
-    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.buffer, state.pdfName, formArea.value, true, setStatus));
+    runSafe(setStatus, () => fillOrFlattenPdfForm(state.pdfBytes.slice().buffer, state.pdfName, formArea.value, true, setStatus));
   });
 
-  // Hub Category Filter Pills, Search & Launchpad Tiles
+  // Hub Category Filter Pills & Search
   let activeCat = 'all';
   const searchEl = document.getElementById('tools-search');
   const catMatchers = {
     ORGANIZE: ['ORGANIZE', 'LAYOUT', 'EDIT'],
     OPTIMIZE: ['OPTIMIZE', 'WORKFLOW'],
-    CONVERT: ['CONVERT', 'OCR'],
+    CONVERT: ['CONVERT', 'OCR', 'CREATE'],
     CAD: ['CAD', 'DATA'],
     SECURITY: ['SECURITY', 'PRIVACY', 'FORMS', 'STAMP'],
   };
@@ -162,11 +162,4 @@ export function initCraftTools(setStatus, runSafe, requireOpenPdf) {
     btn.addEventListener('click', () => applyHubFilter(btn.dataset.filter));
   });
   searchEl?.addEventListener('input', () => applyHubFilter(activeCat));
-
-  document.querySelectorAll('[data-open-hub]').forEach((btn) => {
-    btn.addEventListener('click', () => {
-      document.getElementById('btn-pdf-tools').click();
-      applyHubFilter(btn.dataset.openHub || 'all');
-    });
-  });
 }

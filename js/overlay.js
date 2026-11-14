@@ -11,20 +11,13 @@ import { createSvg, drawMarkupSvg, createWheelZoomHandler } from './overlay-draw
 import { getDefaultMarkupStyle, focusPropTextEditor } from './markup-props.js';
 import { getSearchHighlights } from './search.js';
 
-let svgEl = null;
-let scrollerEl = null;
-let draft = null;
-let panStart = null;
-let dragMove = null; // { markup, lastPt, pushed }
-let onCalibrateCallback = null;
-let activeSnapPt = null;
-let leaderPreviewPt = null;
+let svgEl = null, scrollerEl = null, draft = null, panStart = null;
+let dragMove = null, onCalibrateCallback = null, activeSnapPt = null, leaderPreviewPt = null;
 
 export function initOverlay(onCalibrate) {
   svgEl = document.getElementById('overlay-svg');
   scrollerEl = document.getElementById('canvas-scroller');
   onCalibrateCallback = onCalibrate;
-
   svgEl.addEventListener('pointerdown', onPointerDown);
   svgEl.addEventListener('pointermove', onPointerMove);
   svgEl.addEventListener('pointerup', onPointerUp);
@@ -33,19 +26,14 @@ export function initOverlay(onCalibrate) {
   scrollerEl.addEventListener('wheel', createWheelZoomHandler(scrollerEl, state, renderOverlay, renderCurrentPage), { passive: false });
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
-      if (state.addingLeaderToId) {
-        state.addingLeaderToId = null;
-        leaderPreviewPt = null;
-        notify();
-      } else if (draft) { draft = null; renderOverlay(); }
+      if (state.addingLeaderToId) { state.addingLeaderToId = null; leaderPreviewPt = null; notify(); }
+      else if (draft) { draft = null; renderOverlay(); }
       else if (state.activeTool !== 'select') setTool('select');
     }
   });
 }
 
-export function isDraftingMulti() {
-  return Boolean(draft && draft.multi);
-}
+export function isDraftingMulti() { return Boolean(draft && draft.multi); }
 
 function getPdfPointFromEvent(e, applySnap = true) {
   const rect = svgEl.getBoundingClientRect();
@@ -59,9 +47,7 @@ function getPdfPointFromEvent(e, applySnap = true) {
   return raw;
 }
 
-function toScreen(pt) {
-  return pdfToScreen(pt.x, pt.y, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt);
-}
+function toScreen(pt) { return pdfToScreen(pt.x, pt.y, state.zoom, state.rotation, state.pageWidthPt, state.pageHeightPt); }
 
 function onPointerDown(e) {
   if (!state.pdfBytes) return;
@@ -296,28 +282,21 @@ export function renderOverlay() {
   }
   const { rects: hiRects, activeRect } = getSearchHighlights(state.currentPage);
   for (const r of hiRects) {
-    const p1 = toScreen({ x: r.x, y: r.y });
-    const p2 = toScreen({ x: r.x + r.w, y: r.y + r.h });
-    const x = Math.min(p1.x, p2.x);
-    const y = Math.min(p1.y, p2.y);
-    const w = Math.max(6, Math.abs(p2.x - p1.x));
-    const h = Math.max(6, Math.abs(p2.y - p1.y));
+    const p1 = toScreen({ x: r.x, y: r.y }), p2 = toScreen({ x: r.x + r.w, y: r.y + r.h });
+    const x = Math.min(p1.x, p2.x), y = Math.min(p1.y, p2.y);
+    const w = Math.max(6, Math.abs(p2.x - p1.x)), h = Math.max(6, Math.abs(p2.y - p1.y));
     const isAct = activeRect && r === activeRect;
     svgEl.appendChild(createSvg('rect', {
       x: x - 2, y: y - 2, width: w + 4, height: h + 4, rx: 2,
       fill: isAct ? 'rgba(249, 115, 22, 0.34)' : 'rgba(250, 204, 21, 0.30)',
-      stroke: isAct ? '#ea580c' : '#eab308',
-      'stroke-width': isAct ? 2.5 : 1.2,
+      stroke: isAct ? '#ea580c' : '#eab308', 'stroke-width': isAct ? 2.5 : 1.2,
     }));
   }
-  if (draft) {
-    drawMarkupSvg(svgEl, { ...draft, color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor, lineWidth: state.lineWidth }, toScreen, state, false, true);
-  }
+  if (draft) drawMarkupSvg(svgEl, { ...draft, color: draft.type === 'calibrate' ? '#287b69' : state.strokeColor, lineWidth: state.lineWidth }, toScreen, state, false, true);
   if (state.addingLeaderToId && leaderPreviewPt) {
     const target = state.markups.find((m) => m.id === state.addingLeaderToId && m.page === state.currentPage);
     if (target && target.points.length >= 1) {
-      const a = toScreen(target.points[0]);
-      const b = toScreen(leaderPreviewPt);
+      const a = toScreen(target.points[0]), b = toScreen(leaderPreviewPt);
       svgEl.appendChild(createSvg('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, stroke: target.color || state.strokeColor, 'stroke-width': 2, 'stroke-dasharray': '5,4' }));
     }
   }

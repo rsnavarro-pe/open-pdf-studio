@@ -11,7 +11,7 @@ import {
 export async function exportAnnotatedPdf() {
   if (!state.pdfBytes) return;
   const { PDFDocument, StandardFonts, rgb } = window.PDFLib;
-  const doc = await PDFDocument.load(state.pdfBytes);
+  const doc = await PDFDocument.load(state.pdfBytes.slice());
   const font = await doc.embedFont(StandardFonts.HelveticaBold);
   const pages = doc.getPages();
 
@@ -33,7 +33,7 @@ export async function exportAnnotatedPdf() {
           const knee = { x: a.x + (tip.x >= a.x ? 18 : -18), y: a.y };
           page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: knee.x, y: toPdfY(knee.y) }, thickness: sw, color });
           page.drawLine({ start: { x: knee.x, y: toPdfY(knee.y) }, end: { x: tip.x, y: toPdfY(tip.y) }, thickness: sw, color });
-          drawArrowPdf(page, knee, tip, toPdfY, arrSize, sw, color);
+          drawArrowPdf(page, knee, tip, toPdfY, arrSize, sw, color, m.arrowHead);
         }
         const lbl = m.text || 'CALLOUT';
         const bw = Math.max(42, lbl.length * (fSize * 0.56) + 12);
@@ -45,8 +45,8 @@ export async function exportAnnotatedPdf() {
         for (let i = 1; i < m.points.length; i++) {
           const tip = m.points[i];
           page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: tip.x, y: toPdfY(tip.y) }, thickness: sw, color });
-          drawArrowPdf(page, a, tip, toPdfY, arrSize, sw, color);
-          if (m.arrowHead === 'both' && i === 1) drawArrowPdf(page, tip, a, toPdfY, arrSize, sw, color);
+          drawArrowPdf(page, a, tip, toPdfY, arrSize, sw, color, m.arrowHead);
+          if (m.arrowHead === 'both' && i === 1) drawArrowPdf(page, tip, a, toPdfY, arrSize, sw, color, 'closed');
         }
       } else {
         page.drawLine({ start: { x: a.x, y: toPdfY(a.y) }, end: { x: b.x, y: toPdfY(b.y) }, thickness: sw, color });
@@ -69,7 +69,7 @@ export async function exportAnnotatedPdf() {
       page.drawText(`${prefix}${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`, { x: cx - 20, y: toPdfY(cy), size: 10, font, color });
     } else if ((m.type === 'pen' || m.type === 'highlight') && m.points.length >= 2) {
       const isHi = m.type === 'highlight';
-      const hiColor = isHi ? hexToRgb(m.color || '#facc15') : color;
+      const hiColor = isHi ? hexToRgb(m.color || '#facc15', rgb) : color;
       for (let i = 1; i < m.points.length; i++) {
         page.drawLine({
           start: { x: m.points[i - 1].x, y: toPdfY(m.points[i - 1].y) },
@@ -82,12 +82,14 @@ export async function exportAnnotatedPdf() {
     } else if ((m.type === 'rect' || m.type === 'redact') && m.points.length >= 2) {
       const [a, b] = m.points;
       const isRed = m.type === 'redact';
+      const hasFill = !isRed && Number(m.fillOpacity) > 0;
       page.drawRectangle({
         x: Math.min(a.x, b.x),
         y: toPdfY(Math.max(a.y, b.y)),
         width: Math.abs(b.x - a.x),
         height: Math.abs(b.y - a.y),
-        color: isRed ? rgb(0, 0, 0) : undefined,
+        color: isRed ? rgb(0, 0, 0) : (hasFill ? hexToRgb(m.fillColor || m.color, rgb) : undefined),
+        opacity: isRed ? 1 : (hasFill ? Number(m.fillOpacity) : undefined),
         borderColor: isRed ? rgb(0, 0, 0) : color,
         borderWidth: isRed ? 0 : sw,
       });
@@ -111,7 +113,7 @@ export async function exportAnnotatedPdf() {
     } else if (m.type === 'note' && m.points.length >= 1) {
       const p = m.points[0];
       const py = toPdfY(p.y);
-      const noteCol = hexToRgb(m.color || '#facc15');
+      const noteCol = hexToRgb(m.color || '#facc15', rgb);
       page.drawRectangle({ x: p.x - 8, y: py - 8, width: 16, height: 16, color: noteCol, borderColor: rgb(0.17, 0.17, 0.18), borderWidth: 1 });
       if (m.text) {
         page.drawText(m.text, { x: p.x + 12, y: py - 4, size: 10, font, color: rgb(0.17, 0.17, 0.18) });
@@ -143,6 +145,10 @@ export function exportTakeoffCsv() {
       val = formatLength(polylineLength(m.points), state.unitsPerPt, state.unit);
     } else if (m.type === 'area') {
       val = `${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)} | P=${formatLength(polygonPerimeter(m.points), state.unitsPerPt, state.unit)}`;
+    } else if (m.type === 'cutout') {
+      val = `-${formatArea(polygonArea(m.points), state.unitsPerPt, state.unit)}`;
+    } else if (m.type === 'count') {
+      val = `#${m.countNum || 1} EA`;
     }
     rows.push([idx + 1, m.page, m.type, `"${val.replace(/"/g, '""')}"`, m.color]);
   });
@@ -169,7 +175,8 @@ function drawPoly(page, pts, toPdfY, sw, color, close) {
   }
 }
 
-function drawArrowPdf(page, fromPt, tipPt, toPdfY, size, sw, color) {
+function drawArrowPdf(page, fromPt, tipPt, toPdfY, size, sw, color, headStyle = 'closed') {
+  if (headStyle === 'none') return;
   const dx = tipPt.x - fromPt.x;
   const dy = tipPt.y - fromPt.y;
   const len = Math.hypot(dx, dy);
@@ -179,14 +186,32 @@ function drawArrowPdf(page, fromPt, tipPt, toPdfY, size, sw, color) {
   const px = -uy;
   const py = ux;
   const s = Math.max(6, size);
+  if (headStyle === 'dot') {
+    page.drawCircle({ x: tipPt.x, y: toPdfY(tipPt.y), size: Math.max(2.5, s * 0.28), color, borderColor: color, borderWidth: sw });
+    return;
+  }
+  if (headStyle === 'slash') {
+    const d = s * 0.45;
+    page.drawLine({
+      start: { x: tipPt.x - (ux + px) * d, y: toPdfY(tipPt.y - (uy + py) * d) },
+      end: { x: tipPt.x + (ux + px) * d, y: toPdfY(tipPt.y + (uy + py) * d) },
+      thickness: sw, color,
+    });
+    return;
+  }
   const w = s * 0.44;
   const bx = tipPt.x - ux * s;
   const by = tipPt.y - uy * s;
-  page.drawLine({ start: { x: bx + px * w, y: toPdfY(by + py * w) }, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
-  page.drawLine({ start: { x: bx - px * w, y: toPdfY(by - py * w) }, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
+  const c1 = { x: bx + px * w, y: toPdfY(by + py * w) };
+  const c2 = { x: bx - px * w, y: toPdfY(by - py * w) };
+  page.drawLine({ start: c1, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
+  page.drawLine({ start: c2, end: { x: tipPt.x, y: toPdfY(tipPt.y) }, thickness: sw, color });
+  if (headStyle === 'closed' || headStyle === 'both') {
+    page.drawLine({ start: c1, end: c2, thickness: sw, color });
+  }
 }
 
-function hexToRgb(hex, rgbFn) {
+function hexToRgb(hex, rgbFn = window.PDFLib?.rgb) {
   const clean = hex.replace('#', '');
   const n = parseInt(clean, 16);
   if (Number.isNaN(n)) return rgbFn(0.75, 0.22, 0.17);

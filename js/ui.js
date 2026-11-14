@@ -140,15 +140,16 @@ function renderMarkupsInspector() {
 }
 
 function renderTakeoffSummary() {
-  let totalDist = 0, totalPerim = 0, totalArea = 0, totalCount = 0;
+  let totalDist = 0, totalPerim = 0, rawArea = 0, cutArea = 0, totalCount = 0;
 
   for (const m of state.markups) {
     if (m.type === 'distance' && m.points.length >= 2) totalDist += distPt(m.points[0], m.points[1]);
     else if (m.type === 'perimeter') totalPerim += polylineLength(m.points);
-    else if (m.type === 'area') { totalArea += polygonArea(m.points); totalPerim += polygonPerimeter(m.points); }
-    else if (m.type === 'cutout') { totalArea = Math.max(0, totalArea - polygonArea(m.points)); }
+    else if (m.type === 'area') { rawArea += polygonArea(m.points); totalPerim += polygonPerimeter(m.points); }
+    else if (m.type === 'cutout') cutArea += polygonArea(m.points);
     else if (m.type === 'count') totalCount += 1;
   }
+  const totalArea = Math.max(0, rawArea - cutArea);
 
   document.getElementById('sum-distance').textContent = formatLength(totalDist, state.unitsPerPt, state.unit);
   document.getElementById('sum-perimeter').textContent = formatLength(totalPerim, state.unitsPerPt, state.unit);

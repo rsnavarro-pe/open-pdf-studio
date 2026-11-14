@@ -31,7 +31,7 @@ export async function loadPdfA(arrayBuffer, fileName) {
   };
   pdfDocA = await loadingTask.promise;
   snapCache = new Map();
-  clearDocumentState(new Uint8Array(arrayBuffer), fileName, pdfDocA.numPages);
+  clearDocumentState(new Uint8Array(arrayBuffer).slice(), fileName, pdfDocA.numPages);
   await renderCurrentPage();
   await renderAllThumbnails();
   await renderBookmarksOutline();
