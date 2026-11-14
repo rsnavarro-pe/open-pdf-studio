@@ -6,10 +6,10 @@ This logbook tracks bi-weekly upstream checks against open-source PDF & CAD refe
 
 ## Upstream Reference Sources
 
-| Upstream Project | Primary Scope / Modules Monitored | Sync Cadence |
-| :--- | :--- | :--- |
-| **OpenPDF Studio** | AEC & Engineering PDF annotations, scale calibration, quantity takeoff (BOQ), multi-leader callouts/arrows, revision clouds, CAD (`.dwg` / `.dxf`) vector conversion, OSNAP vector snapping | Every 2 weeks |
-| **PDFCraft** | Dark workbench UI (`All tools`, `Edit`, `Convert`, `E-Sign`, `Measure & CAD`), N-Up multi-page layout, page numbering, grayscale/invert/flatten visual transforms, metadata editor/stripper, AcroForm filler/flattener, table-to-CSV extraction, one-click pipelines | Every 2 weeks |
+| Upstream Project | GitHub Repository | Primary Scope / Modules Monitored | Sync Cadence |
+| :--- | :--- | :--- | :--- |
+| **Open PDF Studio** | `OpenAEC-Foundation/open-pdf-studio` | AEC & Engineering PDF annotations, scale calibration, quantity takeoff (BOQ), multi-leader callouts/arrows, revision clouds, CAD (`.dwg` / `.dxf`) vector conversion, OSNAP vector snapping | Every 2 weeks (1st & 15th) |
+| **PdfCraft** | `storytold/pdfcraft` (`PDFCraftTool/pdfcraft`) | Dark workbench UI (`All tools`, `Edit`, `Convert`, `E-Sign`, `Measure & CAD`), N-Up multi-page layout, page numbering, grayscale/invert/flatten visual transforms, metadata editor/stripper, AcroForm filler/flattener, table-to-CSV extraction, one-click pipelines | Every 2 weeks (1st & 15th) |
 
 ---
 
@@ -32,11 +32,24 @@ This logbook tracks bi-weekly upstream checks against open-source PDF & CAD refe
 
 ---
 
-## Upcoming Bi-Weekly Upstream Sync Log
+## Bi-Weekly Upstream Sync Log
 
-> **Automated Check Template (Appended Every 2 Weeks):**
+### Sync #1 — 2026-11-14 (`v1.4.0` Verification & Upstream Baseline)
+- **Sync Date:** `2026-11-14`
+- **Target Version:** `v1.4.0`
+- **Upstream Changes Detected:**
+  - **`storytold/pdfcraft` (`v2026.11.08`):** Non-destructive byte preservation on save, deep undo history, workbench category navigation (`All tools`, `Edit`, `Convert`, `E-Sign`), and fallback font handling.
+  - **`OpenAEC-Foundation/open-pdf-studio` (`v2026.45.0`):** CAD vector DWG/DXF import & export with scale preservation, drawing-aware OCR text search, AEC callouts/stamps/clouds, and direct plan scaling.
+- **Features / Fixes Integrated into RSN PDF Studio:**
+  - Non-destructive `ArrayBuffer` cloning (`.slice().buffer`) across all PDF/CAD tools so underlying document bytes are never mutated or detached in memory.
+  - Full 5-category dropdown workbench header (`All tools ▾`, `Edit ▾`, `Convert ▾`, `E-Sign ▾`, `Measure & CAD ▾`), collapsible/pinnable Properties drawer, smooth 60fps region zoom, Blank PDF creator (including ARCH D & ARCH E engineering sheets), and multi-leader callouts/arrows.
+- **Verification & Test Suite Status:** All 33 ES modules (`node --check`) and 10 automated test suites passed.
+
+---
+
+> **Automated Check Template (Appended Every 2 Weeks on the 1st & 15th):**
 > - **Sync Date:** `YYYY-MM-DD`
 > - **Target Version:** `v1.x.y`
-> - **Upstream Changes Detected (OpenPDF Studio & PDFCraft):**
+> - **Upstream Changes Detected (`OpenAEC-Foundation/open-pdf-studio` & `storytold/pdfcraft`):**
 > - **Features / Fixes Integrated into RSN PDF Studio:**
 > - **Verification & Test Suite Status:**
