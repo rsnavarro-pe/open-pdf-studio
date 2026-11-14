@@ -371,8 +371,19 @@
         </footer>
       </section>
 
-      <!-- Right Properties & Scale Panel (Collapsible Sections, Auto-Hidden on Welcome Screen) -->
+      <!-- Right Properties & Scale Panel (Collapsible & Pinnable, Auto-Hidden on Welcome Screen) -->
+      <div id="inspector-collapsed-rail" class="inspector-collapsed-rail hidden" title="Expand Properties & Scale Panel">
+        <span class="rail-chevron">«</span>
+        <span class="rail-vert-label">PROPERTIES</span>
+      </div>
       <aside id="sidebar-right" class="sidebar-right hidden">
+        <div class="inspector-header">
+          <span class="inspector-title">Properties &amp; Scale</span>
+          <div class="inspector-actions">
+            <button type="button" id="btn-pin-inspector" class="btn-icon btn-sm active" title="Pin Properties panel open (unpin to auto-collapse when nothing is selected)">📌</button>
+            <button type="button" id="btn-collapse-inspector" class="btn-icon btn-sm" title="Collapse Properties panel">»</button>
+          </div>
+        </div>
         <details class="prop-section" id="props-card" open>
           <summary class="prop-summary">
             <span>Properties &amp; Style</span>

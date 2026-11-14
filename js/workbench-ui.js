@@ -32,15 +32,20 @@ const RAIL_TOOLS = [
 const CAT_LABELS = { all: 'All tools', edit: 'Edit', convert: 'Convert', esign: 'E-Sign', measure: 'Measure & CAD' };
 const PIN_KEY = 'rsn_pdf_pinned_tools_v1';
 const RECENT_KEY = 'rsn_pdf_recent_files_v1';
+const INSPECTOR_PIN_KEY = 'rsn_pdf_inspector_pinned_v1';
 
 let activeTopCat = 'all';
 let searchQuery = '';
 let forceShowWorkbench = false;
-let inspectorHiddenOnCanvas = false;
+let inspectorCollapsed = false;
+let inspectorPinned = localStorage.getItem(INSPECTOR_PIN_KEY) !== 'false';
 
 export function isWorkbenchForced() { return forceShowWorkbench; }
 export function clearWorkbenchForce() { forceShowWorkbench = false; }
-export function isInspectorHiddenOnCanvas() { return inspectorHiddenOnCanvas; }
+export function isInspectorCollapsed() {
+  if (inspectorPinned) return inspectorCollapsed;
+  return inspectorCollapsed && !state.selectedId;
+}
 
 export function closeAllDropdowns() {
   document.querySelectorAll('.craft-dd-wrap.open').forEach((w) => w.classList.remove('open'));
@@ -122,7 +127,22 @@ export function initWorkbenchUI(ensurePdfLoadedFn) {
   document.querySelectorAll('.craft-dd-menu').forEach((menu) => menu.addEventListener('click', () => closeAllDropdowns()));
 
   document.getElementById('btn-home-workbench')?.addEventListener('click', () => { forceShowWorkbench = !forceShowWorkbench; notify(); });
-  document.getElementById('btn-toggle-inspector')?.addEventListener('click', () => { inspectorHiddenOnCanvas = !inspectorHiddenOnCanvas; notify(); });
+  const syncPinBtn = () => {
+    const pb = document.getElementById('btn-pin-inspector');
+    if (pb) pb.classList.toggle('active', inspectorPinned);
+  };
+  syncPinBtn();
+  document.getElementById('btn-toggle-inspector')?.addEventListener('click', () => { inspectorCollapsed = !inspectorCollapsed; notify(); });
+  document.getElementById('btn-collapse-inspector')?.addEventListener('click', () => { inspectorCollapsed = true; notify(); });
+  document.getElementById('inspector-collapsed-rail')?.addEventListener('click', () => { inspectorCollapsed = false; notify(); });
+  document.getElementById('btn-pin-inspector')?.addEventListener('click', () => {
+    inspectorPinned = !inspectorPinned;
+    localStorage.setItem(INSPECTOR_PIN_KEY, String(inspectorPinned));
+    if (inspectorPinned) inspectorCollapsed = false;
+    else inspectorCollapsed = true;
+    syncPinBtn();
+    notify();
+  });
 
   const searchEl = document.getElementById('global-cmd-search');
   if (searchEl) {

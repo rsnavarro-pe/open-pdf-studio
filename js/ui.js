@@ -10,7 +10,7 @@ import { renderOverlay } from './overlay.js';
 import { renderComparison } from './compare.js';
 import { computeBoqRows } from './takeoff.js';
 import { syncPropsCardFromState } from './markup-props.js';
-import { isWorkbenchForced, isInspectorHiddenOnCanvas } from './workbench-ui.js';
+import { isWorkbenchForced, isInspectorCollapsed } from './workbench-ui.js';
 
 const TOOL_HINTS = {
   select: 'Click to select, drag to move, or double-click text/callout to edit.',
@@ -42,7 +42,9 @@ export function renderUI() {
   document.getElementById('drop-zone').classList.toggle('hidden', !showBench);
   document.getElementById('page-stage').classList.toggle('hidden', showBench || (state.compare.active && state.compare.mode === 'side-by-side'));
   document.getElementById('slim-canvas-bar')?.classList.toggle('hidden', showBench);
-  document.getElementById('sidebar-right')?.classList.toggle('hidden', showBench || isInspectorHiddenOnCanvas());
+  const collapsed = isInspectorCollapsed();
+  document.getElementById('sidebar-right')?.classList.toggle('hidden', showBench || collapsed);
+  document.getElementById('inspector-collapsed-rail')?.classList.toggle('hidden', showBench || !collapsed);
   document.getElementById('btn-home-workbench')?.classList.toggle('active', showBench);
   const toolPill = document.getElementById('active-tool-pill');
   if (toolPill) toolPill.textContent = `Tool: ${state.activeTool.toUpperCase()}`;
